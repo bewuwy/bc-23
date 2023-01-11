@@ -2,10 +2,7 @@ package deathbot1;
 
 import battlecode.common.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.lang.Math;
 
 
@@ -143,43 +140,42 @@ public strictfp class RobotPlayer {
             }
         }
 
-        MapLocation myLoc = rc.getMapLocation();
+        MapLocation myLoc = rc.getLocation();
 
         courierDirection = ownHQ.directionTo(myLoc);
 
-        
+        //create a zigzag search path
+        //! I have no idea what times 3 was supposed to do here @olo667 - bewu
+        searchPath.add(myLoc.add(courierDirection.rotateLeft()));
 
-        //create a zig-zag search path
-        searchPath.add(myLoc.add(courierDirection*3))
-        for(int i = 0; i++; i < 5){
-            tmp = searchPath.get(searchPath.size()-1);
-            for (int k = 0; k++; k < 12){
-                tmp = tmp.add(courierDirection.rotateLeft())
+        for(int i = 0; i<5; i++){
+            MapLocation tmp = searchPath.get(searchPath.size()-1);
+
+            for (int k = 0; k < 12; k++) {
+                tmp = tmp.add(courierDirection.rotateLeft());
             }
             searchPath.add(tmp);
 
             tmp = searchPath.get(searchPath.size()-1);
             do {
-                tmp = tmp.add(courierDirection.rotateRight().rotateRight())
+                tmp = tmp.add(courierDirection.rotateRight().rotateRight());
             } while (tmp.y == ownHQ.y + 3 || tmp.y == ownHQ.y - 3 || tmp.y == ownHQ.x + 3 || tmp.x == ownHQ.y - 3);
             searchPath.add(tmp);
 
             tmp = searchPath.get(searchPath.size()-1);
-            for (int k = 0; k++; k < 12){
-                tmp = tmp.add(courierDirection.rotateRight())
+            for (int k = 0; k < 12; k++) {
+                tmp = tmp.add(courierDirection.rotateRight());
             }
             searchPath.add(tmp);
 
             tmp = searchPath.get(searchPath.size()-1);
             do {
-                tmp = tmp.add(courierDirection.rotateLeft().rotateLeft())
+                tmp = tmp.add(courierDirection.rotateLeft().rotateLeft());
             } while (tmp.y == ownHQ.y + 3 || tmp.y == ownHQ.y - 3 || tmp.y == ownHQ.x + 3 || tmp.x == ownHQ.y - 3);
             searchPath.add(tmp);
         }
 
         //System.out.println(searchPath);
-
-
 
         currentCourierStatus = courierStatus.GATHERING;
     }
