@@ -174,7 +174,7 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(3, 3));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(12, 0));
                     //go horizontally until diagonal
@@ -190,7 +190,7 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(3, 0));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(9, -9));
                     //go horizontally until diagonal
@@ -205,7 +205,7 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(3, -3));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(0, -12));
                     //go horizontally until diagonal
@@ -220,9 +220,10 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(0, -3));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(-9, -9));
+                    rc.setIndicatorString(searchPath.get(i).toString());
                     //go horizontally until diagonal
                     searchPath.add(searchPath.get(i-1).translate(9, -9));
                     //go along diagonal
@@ -235,7 +236,7 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(-3, -3));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(-12, 0));
                     //go horizontally until diagonal
@@ -250,7 +251,7 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(-3, 0));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(-9, 9));
                     //go horizontally until diagonal
@@ -265,7 +266,7 @@ public strictfp class RobotPlayer {
                 searchPath.add(myLoc.translate(-3, 3));
                 searchPath.add(searchPath.get(0));
                 //zig-zag
-                for(int i = 0; i<20; i+=4){
+                for(int i = 1; i<20; i+=4){
                     //go along diagonal
                     searchPath.add(searchPath.get(i).translate(0, 12));
                     //go horizontally until diagonal
@@ -450,7 +451,9 @@ public strictfp class RobotPlayer {
             }
             else {
                 // try to go in the set path
-
+                if(searchPath.get(0).isAdjacentTo(myLocation) || rc.sensePassability(myLocation.add(myLocation.directionTo(searchPath.get(0))))) {
+                    searchPath.remove(0);
+                }
                 Direction dir = myLocation.directionTo(searchPath.get(0));
                 if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
                     rc.move(dir);
