@@ -36,6 +36,7 @@ public strictfp class RobotPlayer {
     };
     static courierStatus currentCourierStatus = courierStatus.GATHERING;
     static Direction courierDirection;
+    static List<MapLocation> searchPath = new ArrayList<MapLocation>();
     // static MapLocation[] wellsFound;
     static MapLocation myWell = null;
 
@@ -142,7 +143,44 @@ public strictfp class RobotPlayer {
             }
         }
 
-        courierDirection = ownHQ.directionTo(rc.getLocation());
+        MapLocation myLoc = rc.getMapLocation();
+
+        courierDirection = ownHQ.directionTo(myLoc);
+
+        
+
+        //create a zig-zag search path
+        searchPath.add(myLoc.add(courierDirection*3))
+        for(int i = 0; i++; i < 5){
+            tmp = searchPath.get(searchPath.size()-1);
+            for (int k = 0; k++; k < 12){
+                tmp = tmp.add(courierDirection.rotateLeft())
+            }
+            searchPath.add(tmp);
+
+            tmp = searchPath.get(searchPath.size()-1);
+            do {
+                tmp = tmp.add(courierDirection.rotateRight().rotateRight())
+            } while (tmp.y == ownHQ.y + 3 || tmp.y == ownHQ.y - 3 || tmp.y == ownHQ.x + 3 || tmp.x == ownHQ.y - 3);
+            searchPath.add(tmp);
+
+            tmp = searchPath.get(searchPath.size()-1);
+            for (int k = 0; k++; k < 12){
+                tmp = tmp.add(courierDirection.rotateRight())
+            }
+            searchPath.add(tmp);
+
+            tmp = searchPath.get(searchPath.size()-1);
+            do {
+                tmp = tmp.add(courierDirection.rotateLeft().rotateLeft())
+            } while (tmp.y == ownHQ.y + 3 || tmp.y == ownHQ.y - 3 || tmp.y == ownHQ.x + 3 || tmp.x == ownHQ.y - 3);
+            searchPath.add(tmp);
+        }
+
+        //System.out.println(searchPath);
+
+
+
         currentCourierStatus = courierStatus.GATHERING;
     }
 
