@@ -2,7 +2,13 @@ package deathbot1;
 
 import battlecode.common.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import java.lang.Math;
 
 
@@ -127,7 +133,8 @@ public strictfp class RobotPlayer {
     }
 
     private static void initHeadquarters(RobotController rc) {
-        
+        System.out.println("Initiating headquarters");
+        ownHQ = rc.getLocation();
     }
 
     private static void initCarrier(RobotController rc) throws GameActionException {
@@ -146,34 +153,134 @@ public strictfp class RobotPlayer {
 
         //create a zigzag search path
         //! I have no idea what times 3 was supposed to do here @olo667 - bewu
-        searchPath.add(myLoc.add(courierDirection.rotateLeft()));
+        switch (courierDirection) {
+            case NORTH:
+                searchPath.add(myLoc.translate(0, 3));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for (int i = 1; i < 20; i+=4) {
+                    // go along diagonal
+                    searchPath.add(searchPath.get(i).translate(9, 9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(-9, 9));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(-9, 9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(9, 9));
+                }
 
-        for(int i = 0; i<5; i++){
-            MapLocation tmp = searchPath.get(searchPath.size()-1);
+                break;
+            case NORTHEAST:
+                searchPath.add(myLoc.translate(3, 3));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(12, 0));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(0,12));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(0, 12));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(12, 0));
+                }
 
-            for (int k = 0; k < 12; k++) {
-                tmp = tmp.add(courierDirection.rotateLeft());
-            }
-            searchPath.add(tmp);
-
-            tmp = searchPath.get(searchPath.size()-1);
-            do {
-                tmp = tmp.add(courierDirection.rotateRight().rotateRight());
-            } while (tmp.y == ownHQ.y + 3 || tmp.y == ownHQ.y - 3 || tmp.y == ownHQ.x + 3 || tmp.x == ownHQ.y - 3);
-            searchPath.add(tmp);
-
-            tmp = searchPath.get(searchPath.size()-1);
-            for (int k = 0; k < 12; k++) {
-                tmp = tmp.add(courierDirection.rotateRight());
-            }
-            searchPath.add(tmp);
-
-            tmp = searchPath.get(searchPath.size()-1);
-            do {
-                tmp = tmp.add(courierDirection.rotateLeft().rotateLeft());
-            } while (tmp.y == ownHQ.y + 3 || tmp.y == ownHQ.y - 3 || tmp.y == ownHQ.x + 3 || tmp.x == ownHQ.y - 3);
-            searchPath.add(tmp);
+                break;
+            case EAST:
+                searchPath.add(myLoc.translate(3, 0));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(9, -9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(9, 9));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(9, 9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(9, -9));
+                }
+                break;
+            case SOUTHEAST:
+                searchPath.add(myLoc.translate(3, -3));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(0, -12));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(12, 0));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(12, 0));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(0, -12));
+                }
+                break;
+            case SOUTH:
+                searchPath.add(myLoc.translate(0, -3));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(-9, -9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(9, -9));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(9, -9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(-9, -9));
+                }
+                break;
+            case SOUTHWEST:
+                searchPath.add(myLoc.translate(-3, -3));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(-12, 0));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(0, -12));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(0, -12));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(-12, 0));
+                }
+                break;
+            case WEST:
+                searchPath.add(myLoc.translate(-3, 0));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(-9, 9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(-9, -9));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(-9, -9));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(-9, 9));
+                }
+                break;
+            case NORTHWEST:
+                searchPath.add(myLoc.translate(-3, 3));
+                searchPath.add(searchPath.get(0));
+                //zig-zag
+                for(int i = 0; i<20; i+=4){
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i).translate(0, 12));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i-1).translate(-12, 0));
+                    //go along diagonal
+                    searchPath.add(searchPath.get(i+2).translate(-12, 0));
+                    //go horizontally until diagonal
+                    searchPath.add(searchPath.get(i+1).translate(0, 12));
+                }
+                break;
+            case CENTER:
+                break;
         }
+
+        searchPath.remove(0);
 
         //System.out.println(searchPath);
 
@@ -342,9 +449,9 @@ public strictfp class RobotPlayer {
                 }
             }
             else {
-                // try to go in the initial direction
+                // try to go in the set path
 
-                Direction dir = courierDirection;
+                Direction dir = myLocation.directionTo(searchPath.get(0));
                 if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
                     rc.move(dir);
                 }
