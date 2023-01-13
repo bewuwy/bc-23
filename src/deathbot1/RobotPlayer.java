@@ -67,6 +67,41 @@ public strictfp class RobotPlayer {
         Direction.NORTHWEST,
     };
 
+    static enum terrainTypes{
+        EMPTY,
+        WALL,
+        CLOUD,
+        CURRENT_NORTH,
+        CURRENT_EAST,
+        CURRENT_SOUTH,
+        CURRENT_WEST,
+        ISLAND,
+        WELL,
+        HQ
+    }
+
+    static List<List<terrainTypes>> internalMap = new ArrayList<List<terrainTypes>>();
+
+    static List<MapLocation> sharedIslands = new ArrayList<>();
+
+    static List<MapLocation> newIslands = new ArrayList<>();
+    
+    )
+
+    //Convert a MapLocation to an integer for use in the shared array
+    private static int mapLocationToInt(MapLocation loc, int index) {
+        //TODO - include island index
+        return (loc.x << 6) + loc.y;
+    }
+
+    //Convert an integer to a MapLocation for use in the internal map
+    private static MapLocation intToMapLocation(int loc) {
+        return new MapLocation(loc >> 6 & 0x3F, loc & 0x3F);
+    }
+
+
+
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * It is like the main function for your robot. If this method returns, the robot dies!
@@ -131,6 +166,65 @@ public strictfp class RobotPlayer {
             }
         }
     }
+
+    // download islands from shared array
+    private static void downloadIslands(RobotController rc) throws GameActionException {
+        int i = 0;
+        while (sharedIslands.size()+i < 35)
+        int island = rc.readSharedArray(sharedIslands.size()+4+i);
+        if (island = 0) {
+            break;
+        }
+        sharedIslands.add(intToMapLocation(island));
+    }
+
+
+    // put newIslands into shared array
+    private static void shareIslands(RobotController rc) throws GameActionException {
+        
+        if(rc.canWriteSharedArray()){
+            for (int i = 0; i < newIslands.size(); i++) {
+                int island = newIslands.get(0);
+                rc.writeSharedArray(sharedIslands.size()+4, mapLocationToInt(island)); //+4 because the first 5 are reserved for the HQs and symmetry type
+                newIslands.remove(0);
+                sharedIslands.add(island);
+            }
+        }
+    }
+    // look at the terrain around you and save it to the internal map
+    // save any islands to newIslands
+    private static void scout(RobotController rc) throws GameActionException {
+        MapInfo[] visibleMap = rc.senseNearbyMapInfos();
+        for (int i = 0; i < visibleMap.length; i++) {
+            MapLocation loc = visibleMap[i];
+            if(loc.hasCloud()) {
+                internalMap.get(loc.x).set(loc.y, terrainTypes.CLOUD);
+            }
+            else if(!loc.isPassable()) {
+                internalMap.get(loc.x).set(loc.y, terrainTypes.WALL);
+            } else switch(loc.getCurrentDirection){
+                case Direction.NORTH:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_NORTH);
+                    break;
+                case Direction.SOUTH:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_SOUTH);
+                    break;
+                case Direction.EAST:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_EAST);
+                    break;
+                case Direction.WEST:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_WEST);
+                    break;
+                case Direction.CENTER:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.NORMAL);
+                    break;
+            }
+        }
+        // check for islands
+        rc.senseNearbyIslands();
+        //TODO add islands to newIslands
+    }
+
 
     private static void initHeadquarters(RobotController rc) {
         System.out.println("Initiating headquarters");
@@ -451,7 +545,7 @@ public strictfp class RobotPlayer {
             }
             else {
                 // try to go in the set path
-                if(searchPath.get(0).isAdjacentTo(myLocation) || rc.sensePassability(myLocation.add(myLocation.directionTo(searchPath.get(0))))) {
+                if(searchPath.get(0).isAdjacentTo(myLocation) || rc.canMove(myLocation.add(myLocation.directionTo(searchPath.get(0))))) {
                     searchPath.remove(0);
                 }
                 Direction dir = myLocation.directionTo(searchPath.get(0));
