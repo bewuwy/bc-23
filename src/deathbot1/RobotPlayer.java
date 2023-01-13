@@ -122,24 +122,24 @@ public strictfp class RobotPlayer {
                 // Init the bots
                 if (turnCount == 1) {
                     switch (rc.getType()) {
-                        case HEADQUARTERS:     initHeadquarters(rc);  break;
-                        case CARRIER:      initCarrier(rc);   break;
+                        case HEADQUARTERS: initHeadquarters(rc); break;
+                        case CARRIER: initCarrier(rc); break;
                         case LAUNCHER: initLauncher(rc); break;
-                        case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
-                        case DESTABILIZER: // You might want to give them a try!
-                        case AMPLIFIER:       break;
+                        case BOOSTER: break; // TODO
+                        case DESTABILIZER: break; // TODO
+                        case AMPLIFIER: break; // TODO
                     }
                 }
 
                 // Run the bots
                 else {
                     switch (rc.getType()) {
-                        case HEADQUARTERS:     runHeadquarters(rc);  break;
-                        case CARRIER:      runCarrier(rc);   break;
+                        case HEADQUARTERS: runHeadquarters(rc); break;
+                        case CARRIER: runCarrier(rc); break;
                         case LAUNCHER: runLauncher(rc); break;
-                        case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
-                        case DESTABILIZER: // You might want to give them a try!
-                        case AMPLIFIER:       break;
+                        case BOOSTER: break; // TODO
+                        case DESTABILIZER: break; // TODO
+                        case AMPLIFIER: break; // TODO
                     }
                 }
             } catch (GameActionException e) {
@@ -286,6 +286,8 @@ public strictfp class RobotPlayer {
                 break;
             case NORTHWEST:
                 zg.createZigZagSearchPath(-3, 3, 0, 12);
+                break;
+            case CENTER:
                 break;
         }
 
