@@ -77,7 +77,8 @@ public strictfp class RobotPlayer {
         CURRENT_WEST,
         ISLAND,
         WELL,
-        HQ
+        HQ,
+        NORMAL
     }
 
     static List<List<terrainTypes>> internalMap = new ArrayList<List<terrainTypes>>();
@@ -85,8 +86,6 @@ public strictfp class RobotPlayer {
     static List<MapLocation> sharedIslands = new ArrayList<>();
 
     static List<MapLocation> newIslands = new ArrayList<>();
-    
-    )
 
     //Convert a MapLocation to an integer for use in the shared array
     private static int mapLocationToInt(MapLocation loc, int index) {
@@ -98,9 +97,6 @@ public strictfp class RobotPlayer {
     private static MapLocation intToMapLocation(int loc) {
         return new MapLocation(loc >> 6 & 0x3F, loc & 0x3F);
     }
-
-
-
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -170,52 +166,57 @@ public strictfp class RobotPlayer {
     // download islands from shared array
     private static void downloadIslands(RobotController rc) throws GameActionException {
         int i = 0;
-        while (sharedIslands.size()+i < 35)
-        int island = rc.readSharedArray(sharedIslands.size()+4+i);
-        if (island = 0) {
-            break;
-        }
-        sharedIslands.add(intToMapLocation(island));
-    }
+        while (sharedIslands.size()+i < 35) {
 
-
-    // put newIslands into shared array
-    private static void shareIslands(RobotController rc) throws GameActionException {
-        
-        if(rc.canWriteSharedArray()){
-            for (int i = 0; i < newIslands.size(); i++) {
-                int island = newIslands.get(0);
-                rc.writeSharedArray(sharedIslands.size()+4, mapLocationToInt(island)); //+4 because the first 5 are reserved for the HQs and symmetry type
-                newIslands.remove(0);
-                sharedIslands.add(island);
+            int island = rc.readSharedArray(sharedIslands.size()+4+i);
+            if (island == 0) {
+                break;
             }
+            sharedIslands.add(intToMapLocation(island));
+            i++;
         }
     }
+
+    //! // put newIslands into shared array - @olo667 - this is not working
+    // private static void shareIslands(RobotController rc) throws GameActionException {
+        
+    //     if(rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
+    //         for (int i = 0; i < newIslands.size(); i++) {
+    //             int island = newIslands.get(0);
+    //             rc.writeSharedArray(sharedIslands.size()+4, mapLocationToInt(island)); //+4 because the first 5 are reserved for the HQs and symmetry type
+    //             newIslands.remove(0);
+    //             sharedIslands.add(island);
+    //         }
+    //     }
+    // }
+
     // look at the terrain around you and save it to the internal map
     // save any islands to newIslands
     private static void scout(RobotController rc) throws GameActionException {
         MapInfo[] visibleMap = rc.senseNearbyMapInfos();
         for (int i = 0; i < visibleMap.length; i++) {
-            MapLocation loc = visibleMap[i];
-            if(loc.hasCloud()) {
+            MapInfo loc_info = visibleMap[i];
+            MapLocation loc = loc_info.getMapLocation();
+
+            if(loc_info.hasCloud()) {
                 internalMap.get(loc.x).set(loc.y, terrainTypes.CLOUD);
             }
-            else if(!loc.isPassable()) {
+            else if(!loc_info.isPassable()) {
                 internalMap.get(loc.x).set(loc.y, terrainTypes.WALL);
-            } else switch(loc.getCurrentDirection){
-                case Direction.NORTH:
+            } else switch(loc_info.getCurrentDirection()) {
+                case NORTH:
                     internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_NORTH);
                     break;
-                case Direction.SOUTH:
+                case SOUTH:
                     internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_SOUTH);
                     break;
-                case Direction.EAST:
+                case EAST:
                     internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_EAST);
                     break;
-                case Direction.WEST:
+                case WEST:
                     internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_WEST);
                     break;
-                case Direction.CENTER:
+                case CENTER:
                     internalMap.get(loc.x).set(loc.y, terrainTypes.NORMAL);
                     break;
             }
@@ -246,138 +247,49 @@ public strictfp class RobotPlayer {
         courierDirection = ownHQ.directionTo(myLoc);
 
         //create a zigzag search path
-        //! I have no idea what times 3 was supposed to do here @olo667 - bewu
+        class ZigZagger {
+            void createZigZagSearchPath(int x, int y, int xStep, int yStep) {
+                searchPath.add(myLoc.translate(x, y));
+                searchPath.add(searchPath.get(0));
+                for (int i = 1; i < 20; i += 4) {
+                    searchPath.add(searchPath.get(i).translate(xStep, yStep));
+                    searchPath.add(searchPath.get(i - 1).translate(-xStep, yStep));
+                    searchPath.add(searchPath.get(i + 2).translate(-xStep, yStep));
+                    searchPath.add(searchPath.get(i + 1).translate(xStep, yStep));
+                }
+            }
+        }
+
+        ZigZagger zg = new ZigZagger();
+            
         switch (courierDirection) {
             case NORTH:
-                searchPath.add(myLoc.translate(0, 3));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for (int i = 1; i < 20; i+=4) {
-                    // go along diagonal
-                    searchPath.add(searchPath.get(i).translate(9, 9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(-9, 9));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(-9, 9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(9, 9));
-                }
-
+                zg.createZigZagSearchPath(0, 3, 9, 9);
                 break;
             case NORTHEAST:
-                searchPath.add(myLoc.translate(3, 3));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(12, 0));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(0,12));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(0, 12));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(12, 0));
-                }
-
+                zg.createZigZagSearchPath(3, 3, 12, 0);
                 break;
             case EAST:
-                searchPath.add(myLoc.translate(3, 0));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(9, -9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(9, 9));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(9, 9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(9, -9));
-                }
+                zg.createZigZagSearchPath(3, 0, 9, -9);
                 break;
             case SOUTHEAST:
-                searchPath.add(myLoc.translate(3, -3));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(0, -12));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(12, 0));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(12, 0));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(0, -12));
-                }
+                zg.createZigZagSearchPath(3, -3, 0, -12);
                 break;
             case SOUTH:
-                searchPath.add(myLoc.translate(0, -3));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(-9, -9));
-                    rc.setIndicatorString(searchPath.get(i).toString());
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(9, -9));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(9, -9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(-9, -9));
-                }
+                zg.createZigZagSearchPath(0, -3, -9, -9);
                 break;
             case SOUTHWEST:
-                searchPath.add(myLoc.translate(-3, -3));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(-12, 0));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(0, -12));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(0, -12));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(-12, 0));
-                }
+                zg.createZigZagSearchPath(-3, -3, -12, 0);
                 break;
             case WEST:
-                searchPath.add(myLoc.translate(-3, 0));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(-9, 9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(-9, -9));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(-9, -9));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(-9, 9));
-                }
+                zg.createZigZagSearchPath(-3, 0, -9, 9);
                 break;
             case NORTHWEST:
-                searchPath.add(myLoc.translate(-3, 3));
-                searchPath.add(searchPath.get(0));
-                //zig-zag
-                for(int i = 1; i<20; i+=4){
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i).translate(0, 12));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i-1).translate(-12, 0));
-                    //go along diagonal
-                    searchPath.add(searchPath.get(i+2).translate(-12, 0));
-                    //go horizontally until diagonal
-                    searchPath.add(searchPath.get(i+1).translate(0, 12));
-                }
-                break;
-            case CENTER:
+                zg.createZigZagSearchPath(-3, 3, 0, 12);
                 break;
         }
 
         searchPath.remove(0);
-
-        //System.out.println(searchPath);
 
         currentCourierStatus = courierStatus.GATHERING;
     }
@@ -442,6 +354,8 @@ public strictfp class RobotPlayer {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runCarrier(RobotController rc) throws GameActionException {
+        MapLocation myLocation = rc.getLocation();
+
         if (rc.getAnchor() != null) {
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
@@ -453,8 +367,8 @@ public strictfp class RobotPlayer {
             if (islandLocs.size() > 0) {
                 MapLocation islandLocation = islandLocs.iterator().next();
                 rc.setIndicatorString("Moving my anchor towards " + islandLocation);
-                while (!rc.getLocation().equals(islandLocation)) {
-                    Direction dir = rc.getLocation().directionTo(islandLocation);
+                while (!myLocation.equals(islandLocation)) {
+                    Direction dir = myLocation.directionTo(islandLocation);
                     if (rc.canMove(dir)) {
                         rc.move(dir);
                     }
@@ -467,11 +381,11 @@ public strictfp class RobotPlayer {
         }
 
         if (currentCourierStatus == courierStatus.RETURNING) {
-            Direction dir = rc.getLocation().directionTo(ownHQ);
+            Direction dir = myLocation.directionTo(ownHQ);
             if (rc.canMove(dir)) {
                 rc.move(dir);
             }
-            if (rc.getLocation().isAdjacentTo(ownHQ)){
+            if (myLocation.isAdjacentTo(ownHQ)){
                 for (ResourceType t : ResourceType.values()) {
                     int r =rc.getResourceAmount(t);
                     if (r > 0) {
@@ -481,25 +395,6 @@ public strictfp class RobotPlayer {
                 currentCourierStatus = courierStatus.GATHERING;
             }
         }
-
-        // Try to gather from squares around us.
-        // if(rc.senseNearbyWells(1))
-         MapLocation myLocation = rc.getLocation();
-        // for (int dx = -1; dx <= 1; dx++) {
-        //     for (int dy = -1; dy <= 1; dy++) {
-        //         MapLocation wellLocation = new MapLocation(myLocation.x + dx, myLocation.y + dy);
-        //         if (rc.canCollectResource(wellLocation, -1)) {
-        //             rc.collectResource(wellLocation, -1);
-        //             rc.setIndicatorString("Collecting, now have, AD:" + 
-        //                 rc.getResourceAmount(ResourceType.ADAMANTIUM) + 
-        //                 " MN: " + rc.getResourceAmount(ResourceType.MANA) + 
-        //                 " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
-        //         } else {
-        //             currentCourierStatus = courierStatus.RETURNING;
-        //             myWell = rc.getLocation();
-        //         }
-        //     }
-        //}
         
         // // Occasionally try out the carriers attack // TODO: is this needed?
         // if (rng.nextInt(20) == 1) {
@@ -545,7 +440,7 @@ public strictfp class RobotPlayer {
             }
             else {
                 // try to go in the set path
-                if(searchPath.get(0).isAdjacentTo(myLocation) || rc.canMove(myLocation.add(myLocation.directionTo(searchPath.get(0))))) {
+                if(searchPath.get(0).isAdjacentTo(myLocation) || rc.canMove(myLocation.directionTo(searchPath.get(0)))) {
                     searchPath.remove(0);
                 }
                 Direction dir = myLocation.directionTo(searchPath.get(0));
