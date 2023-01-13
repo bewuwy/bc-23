@@ -17,6 +17,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
+      - name: Execute Gradle update
+        run: ./gradlew update
+
       - name: Execute Gradle build
         run: ./gradlew build
 
@@ -34,6 +37,12 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+
+      - name: Execute Gradle update
+        run: ./gradlew update
+
+      - name: Execute Gradle build
+        run: ./gradlew build
 
       - name: Execute Gradle run
         run: ./gradlew run
