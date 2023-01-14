@@ -23,26 +23,5 @@ jobs:
       - name: Execute Gradle build
         run: ./gradlew build
 
-  run:
-    runs-on: ubuntu-latest
-    # needs: build
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 8
-        uses: actions/setup-java@v3
-        with:
-          java-version: '8'
-          distribution: 'adopt'
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
-      - name: Execute Gradle update
-        run: ./gradlew update
-
-      - name: Execute Gradle build
-        run: ./gradlew build
-
       - name: Execute Gradle run
         run: ./gradlew run

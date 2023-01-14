@@ -46,6 +46,7 @@ public strictfp class RobotPlayer {
     // HQ VARS
     static int numCarriers = 0;
     static int numLaunchers = 0;
+    static int numAnchorsBuilt = 0;
 
     /**
      * A random number generator.
@@ -153,7 +154,7 @@ public strictfp class RobotPlayer {
                  sharedIslands.add(island);
              }
          }
-     }
+    }
 
     // look at the terrain around you and save it to the internal map
     // save any islands to newIslands
@@ -202,10 +203,7 @@ public strictfp class RobotPlayer {
                 newIslands.add(island); //add islands to newIslands
             }
         }
-        
     }
-
-    // ------------------------------
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -230,10 +228,7 @@ public strictfp class RobotPlayer {
 
 
         while (true) {
-            // This code runs during the entire lifespan of the robot, which is why it is in an infinite
-            // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
-            // loop, we call Clock.yield(), signifying that we've done everything we want to do.
-            turnCount += 1;  // We have now been alive for one more turn!
+            turnCount += 1;
 
             try {                
                 // Init the bots
@@ -291,9 +286,6 @@ public strictfp class RobotPlayer {
         }
     }
 
-    
-
-
     private static void initHeadquarters(RobotController rc) {
         System.out.println("Initiating headquarters");
         ownHQ = rc.getLocation();
@@ -328,7 +320,7 @@ public strictfp class RobotPlayer {
         }
 
         ZigZagger zg = new ZigZagger();
-            
+        
         switch (courierDirection) {
             case NORTH:
                 zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
@@ -375,10 +367,6 @@ public strictfp class RobotPlayer {
 
     }
 
-    /**
-     * Run a single turn for a Headquarters.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
     static void runHeadquarters(RobotController rc) throws GameActionException {
         // 4 starting carriers 
         int wantedCarriers = 4;
@@ -392,44 +380,26 @@ public strictfp class RobotPlayer {
             numCarriers++;
         }
 
-        int wantedLaunchers = (int)(3 * Math.log(rc.getRoundNum()) - 1);
-        if (numLaunchers < wantedLaunchers && rc.getRoundNum() > wantedCarriers + 1 && rc.getResourceAmount(ResourceType.MANA) >= 100) {
-            rc.setIndicatorString("Building launchers");
+        // spawning launchers
+        Direction launcher_dir = directions[rng.nextInt(8)];
+        MapLocation launcher_loc = rc.getLocation().add(launcher_dir);
 
-            Direction dir = directions[rng.nextInt(8)];
-            MapLocation loc = rc.getLocation().add(dir);
+        int wantedLaunchers = (int)(3 * Math.log(rc.getRoundNum()) - 1);
+        if (numLaunchers < wantedLaunchers && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
+            rc.setIndicatorString("Building launchers");
             
-            rc.buildRobot(RobotType.LAUNCHER, loc);
+            rc.buildRobot(RobotType.LAUNCHER, launcher_loc);
             numLaunchers++;
         }
 
-        /*
-        if (rc.canBuildAnchor(Anchor.STANDARD)) {
-            // If we can build an anchor do it!
+        if (sharedIslands.size() > numAnchorsBuilt && rc.canBuildAnchor(Anchor.STANDARD)) {
+            rc.setIndicatorString("Building anchor! " + Anchor.STANDARD);
+        
             rc.buildAnchor(Anchor.STANDARD);
-            rc.setIndicatorString("Building anchor! " + rc.getAnchor());
+            numAnchorsBuilt++;
         }
-        */
-
-        // if (rng.nextBoolean()) {
-        //     // Let's try to build a carrier.
-        //     rc.setIndicatorString("Trying to build a carrier");
-        //     if (rc.canBuildRobot(RobotType.CARRIER, newLoc)) {
-        //         rc.buildRobot(RobotType.CARRIER, newLoc);
-        //     }
-        // } else {
-        //     // Let's try to build a launcher.
-        //     rc.setIndicatorString("Trying to build a launcher");
-        //     if (rc.canBuildRobot(RobotType.LAUNCHER, newLoc)) {
-        //         rc.buildRobot(RobotType.LAUNCHER, newLoc);
-        //     }
-        // }
     }
 
-    /**
-     * Run a single turn for a Carrier.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
     static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
         rc.setIndicatorString(currentCourierStatus.toString());
@@ -473,7 +443,7 @@ public strictfp class RobotPlayer {
             }
         }
         
-        // // Occasionally try out the carriers attack // TODO: is this needed?
+        // // Occasionally try out the carriers attack
         // if (rng.nextInt(20) == 1) {
         //     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         //     if (enemyRobots.length > 0) {
@@ -531,10 +501,6 @@ public strictfp class RobotPlayer {
         
     }
 
-    /**
-     * Run a single turn for a Launcher.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
     static void runLauncher(RobotController rc) throws GameActionException {
         // Try to attack someone
         int radius = rc.getType().actionRadiusSquared;
