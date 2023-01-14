@@ -104,7 +104,7 @@ public class Carrier extends RobotPlayer {
         if (currentCourierStatus == courierStatus.RETURNING) {
             Direction dir = myLocation.directionTo(ownHQ);
             if (rc.canMove(dir)) {
-                rc.move(dir);
+                dfs(rc, dir);
             }
             if (myLocation.isAdjacentTo(ownHQ)){
                 for (ResourceType t : ResourceType.values()) {
@@ -144,7 +144,7 @@ public class Carrier extends RobotPlayer {
                         // go towards myWell
                         Direction dir = myLocation.directionTo(myWell);
                         if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
-                            rc.move(dir);
+                            dfs(rc, dir);
                         }
                     }
                 }
@@ -156,17 +156,13 @@ public class Carrier extends RobotPlayer {
                             myWell = well.getMapLocation();
                         }
                     }
-                    MapLocation m = searchPath.get(0);
-                    MapLocation m2 = searchPath.get(1);
-                    rc.setIndicatorLine(m, m2, 255, 255, 255);
-                    rc.setIndicatorString("searchPath: " + m + " " + m2);
                     // try to go in the set path
                     if(searchPath.get(0).isAdjacentTo(myLocation)) {
                         searchPath.remove(0);
                     }
                     Direction dir = myLocation.directionTo(searchPath.get(0));
                     if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
-                        rc.move(dir);
+                        dfs(rc, dir);
                     }
                 
                 }

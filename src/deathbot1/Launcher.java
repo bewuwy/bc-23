@@ -27,16 +27,16 @@ public class Launcher extends RobotPlayer {
         
         switch (robotDirection) {
             case NORTH:
-                zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
+                zg.createZigZagSearchPath(0, 3, -9, 9, 9, 9);
                 break;
             case NORTHEAST:
-                zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
+                zg.createZigZagSearchPath(3, 3, 0, 12, 12, 0);
                 break;
             case EAST:
-                zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
+                zg.createZigZagSearchPath(3, 0, 9, 9, 9, -9);
                 break;
             case SOUTHEAST:
-                zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
+                zg.createZigZagSearchPath(3, -3, 12, 0, 0, -12);
                 break;
             case SOUTH:
                 zg.createZigZagSearchPath(0, -3, -9, 9, -9, -9);
@@ -78,7 +78,7 @@ public class Launcher extends RobotPlayer {
             // If there are enemies, move towards them
             Direction dir = myLocation.directionTo(enemies[0].location);
             if (rc.canMove(dir)) {
-                rc.move(dir);
+                dfs(rc, dir);
             }
         } else {
             // If there are no enemies, move away from own HQ
@@ -89,7 +89,7 @@ public class Launcher extends RobotPlayer {
             }
             Direction dir = myLocation.directionTo(searchPath.get(0));
             if (rc.canMove(dir)) {
-                rc.move(dir);
+                dfs(rc, dir);
             }
         }
     }
