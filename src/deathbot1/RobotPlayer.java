@@ -80,7 +80,8 @@ public strictfp class RobotPlayer {
         ISLAND,
         WELL,
         HQ,
-        NORMAL
+        NORMAL,
+        UNKNOWN
     }
 
     static List<List<terrainTypes>> internalMap = new ArrayList<List<terrainTypes>>();
@@ -219,6 +220,15 @@ public strictfp class RobotPlayer {
 
         // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
+
+        //init internalMap
+        for (int i = 0; i < 60; i++) {
+            internalMap.add(new ArrayList<terrainTypes>());
+            for (int j = 0; j < 60; j++) {
+                internalMap.get(i).add(terrainTypes.UNKNOWN);
+            }
+        }
+
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -423,7 +433,7 @@ public strictfp class RobotPlayer {
      */
     static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
-
+        rc.setIndicatorString(currentCourierStatus.toString());
         if (rc.getAnchor() != null) {
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
@@ -485,6 +495,7 @@ public strictfp class RobotPlayer {
                         " MN: " + rc.getResourceAmount(ResourceType.MANA) + 
                         " EX: " + rc.getResourceAmount(ResourceType.ELIXIR)); 
                 } else {
+                    rc.setIndicatorString("Can't collect from well");
                     currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to HQ
                     myWell = rc.getLocation();
                 }
