@@ -67,6 +67,8 @@ public strictfp class RobotPlayer {
         Direction.NORTHWEST,
     };
 
+    //! Map Code goes here ----------------------------------------------
+
     static enum terrainTypes{
         EMPTY,
         WALL,
@@ -83,20 +85,126 @@ public strictfp class RobotPlayer {
 
     static List<List<terrainTypes>> internalMap = new ArrayList<List<terrainTypes>>();
 
-    static List<MapLocation> sharedIslands = new ArrayList<>();
+    static List<Island> sharedIslands = new ArrayList<>();
 
-    static List<MapLocation> newIslands = new ArrayList<>();
+    static List<Island> newIslands = new ArrayList<>();
 
-    //Convert a MapLocation to an integer for use in the shared array
-    private static int mapLocationToInt(MapLocation loc, int index) {
-        //TODO - include island index
-        return (loc.x << 6) + loc.y;
+
+    // Wrapper class for island(map location and index)
+    static class Island {
+        MapLocation loc;
+        int index;
+
+        public Island(MapLocation loc, int index) {
+            this.loc = loc;
+            this.index = index;
+        }
+
+        //equals method on index
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+            if (!(o instanceof Island)) {
+                return false;
+            }
+            Island i = (Island) o;
+            return i.index == this.index;
+        }
     }
 
-    //Convert an integer to a MapLocation for use in the internal map
-    private static MapLocation intToMapLocation(int loc) {
-        return new MapLocation(loc >> 6 & 0x3F, loc & 0x3F);
+    //Convert an Island to an integer for use in the shared array
+    private static int IslandToInt(Island island) {
+        return (island.index << 11) + (island.loc.x << 5) + island.loc.y%32;
     }
+
+    //Convert an integer to a Island for use in the internal map
+    private static Island intToIsland(int loc) {
+        return new Island(new MapLocation(loc >> 5 & 0x3F, loc & 0x20), loc >> 12);
+    }
+
+    // download islands from shared array
+    private static void downloadIslands(RobotController rc) throws GameActionException {
+        int i = 0;
+        while (sharedIslands.size()+i < 35) {
+
+            int island = rc.readSharedArray(sharedIslands.size()+4+i);
+            if (island == 0) {
+                break;
+            }
+            sharedIslands.add(intToIsland(island));
+            if(newIslands.contains(intToIsland(island))){
+                newIslands.remove(intToIsland(island));
+            }
+            i++;
+        }
+    }
+
+    // put newIslands into shared array - should work now
+    private static void shareIslands(RobotController rc) throws GameActionException {
+        
+         if(rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
+             for (int i = 0; i < newIslands.size(); i++) {
+                 Island island = newIslands.get(0);
+                 rc.writeSharedArray(sharedIslands.size()+4, IslandToInt(island)); //+4 because the first 5 are reserved for the HQs and symmetry type
+                 newIslands.remove(0);
+                 sharedIslands.add(island);
+             }
+         }
+     }
+
+    // look at the terrain around you and save it to the internal map
+    // save any islands to newIslands
+    private static void scout(RobotController rc) throws GameActionException {
+        MapInfo[] visibleMap = rc.senseNearbyMapInfos();
+        for (int i = 0; i < visibleMap.length; i++) {
+            MapInfo loc_info = visibleMap[i];
+            MapLocation loc = loc_info.getMapLocation();
+
+            if(loc_info.hasCloud()) {
+                internalMap.get(loc.x).set(loc.y, terrainTypes.CLOUD);
+            }
+            else if(!loc_info.isPassable()) {
+                internalMap.get(loc.x).set(loc.y, terrainTypes.WALL);
+            } else switch(loc_info.getCurrentDirection()) {
+                case NORTH:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_NORTH);
+                    break;
+                case SOUTH:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_SOUTH);
+                    break;
+                case EAST:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_EAST);
+                    break;
+                case WEST:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_WEST);
+                    break;
+                case CENTER:
+                    internalMap.get(loc.x).set(loc.y, terrainTypes.NORMAL);
+                    break;
+                case NORTHEAST:
+                    break;
+                case NORTHWEST:
+                    break;
+                case SOUTHEAST:
+                    break;
+                case SOUTHWEST:
+                    break;
+            }
+        }
+        // check for islands
+        int[] islands_index = rc.senseNearbyIslands();
+        for (int i : islands_index) {
+            Island island = new Island(rc.senseNearbyIslandLocations(i)[0], i);
+            if (!sharedIslands.contains(island)) {
+                newIslands.add(island); //add islands to newIslands
+            }
+        }
+        
+    }
+
+    // ------------------------------
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -141,6 +249,17 @@ public strictfp class RobotPlayer {
                         case DESTABILIZER: break; // TODO
                         case AMPLIFIER: break; // TODO
                     }
+
+                    // End of turn actions
+
+                    // download new islands
+                    downloadIslands(rc);
+
+                    // gather and share information
+                    if (turnCount % 10 == 0) {
+                        scout(rc);
+                        shareIslands(rc);
+                    }
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
@@ -163,68 +282,7 @@ public strictfp class RobotPlayer {
         }
     }
 
-    // download islands from shared array
-    private static void downloadIslands(RobotController rc) throws GameActionException {
-        int i = 0;
-        while (sharedIslands.size()+i < 35) {
-
-            int island = rc.readSharedArray(sharedIslands.size()+4+i);
-            if (island == 0) {
-                break;
-            }
-            sharedIslands.add(intToMapLocation(island));
-            i++;
-        }
-    }
-
-    //! // put newIslands into shared array - @olo667 - this is not working
-    // private static void shareIslands(RobotController rc) throws GameActionException {
-        
-    //     if(rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
-    //         for (int i = 0; i < newIslands.size(); i++) {
-    //             int island = newIslands.get(0);
-    //             rc.writeSharedArray(sharedIslands.size()+4, mapLocationToInt(island)); //+4 because the first 5 are reserved for the HQs and symmetry type
-    //             newIslands.remove(0);
-    //             sharedIslands.add(island);
-    //         }
-    //     }
-    // }
-
-    // look at the terrain around you and save it to the internal map
-    // save any islands to newIslands
-    private static void scout(RobotController rc) throws GameActionException {
-        MapInfo[] visibleMap = rc.senseNearbyMapInfos();
-        for (int i = 0; i < visibleMap.length; i++) {
-            MapInfo loc_info = visibleMap[i];
-            MapLocation loc = loc_info.getMapLocation();
-
-            if(loc_info.hasCloud()) {
-                internalMap.get(loc.x).set(loc.y, terrainTypes.CLOUD);
-            }
-            else if(!loc_info.isPassable()) {
-                internalMap.get(loc.x).set(loc.y, terrainTypes.WALL);
-            } else switch(loc_info.getCurrentDirection()) {
-                case NORTH:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_NORTH);
-                    break;
-                case SOUTH:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_SOUTH);
-                    break;
-                case EAST:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_EAST);
-                    break;
-                case WEST:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_WEST);
-                    break;
-                case CENTER:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.NORMAL);
-                    break;
-            }
-        }
-        // check for islands
-        rc.senseNearbyIslands();
-        //TODO add islands to newIslands
-    }
+    
 
 
     private static void initHeadquarters(RobotController rc) {
