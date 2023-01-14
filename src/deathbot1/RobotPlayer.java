@@ -11,19 +11,7 @@ import java.util.Set;
 
 import java.lang.Math;
 
-
-/**
- * RobotPlayer is the class that describes your main robot strategy.
- * The run() method inside this class is like your main function: this is what we'll call once your robot
- * is created!
- */
 public strictfp class RobotPlayer {
-
-    /**
-     * We will use this variable to count the number of turns this robot has been alive.
-     * You can use static variables like this to save any information you want. Keep in mind that even though
-     * these variables are static, in Battlecode they aren't actually shared between your robots.
-     */
     static int turnCount = 0;
 
     static MapLocation ownHQ;
@@ -48,15 +36,8 @@ public strictfp class RobotPlayer {
     static int numLaunchers = 0;
     static int numAnchorsBuilt = 0;
 
-    /**
-     * A random number generator.
-     * We will use this RNG to make some random moves. The Random class is provided by the java.util.Random
-     * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
-     * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
-     */
     static final Random rng = new Random(6147);
 
-    /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
         Direction.NORTH,
         Direction.NORTHEAST,
@@ -116,17 +97,17 @@ public strictfp class RobotPlayer {
         }
     }
 
-    //Convert an Island to an integer for use in the shared array
+    // Convert an Island to an integer for use in the shared array
     private static int IslandToInt(Island island) {
         return (island.index << 11) + (island.loc.x << 5) + island.loc.y%32;
     }
 
-    //Convert an integer to a Island for use in the internal map
+    // Convert an integer to a Island for use in the internal map
     private static Island intToIsland(int loc) {
         return new Island(new MapLocation(loc >> 5 & 0x3F, loc & 0x20), loc >> 12);
     }
 
-    // download islands from shared array
+    // Download islands from shared array
     private static void downloadIslands(RobotController rc) throws GameActionException {
         int i = 0;
         while (sharedIslands.size()+i < 35) {
@@ -149,7 +130,7 @@ public strictfp class RobotPlayer {
          if(rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
              for (int i = 0; i < newIslands.size(); i++) {
                  Island island = newIslands.get(0);
-                 rc.writeSharedArray(sharedIslands.size()+4, IslandToInt(island)); //+4 because the first 5 are reserved for the HQs and symmetry type
+                 rc.writeSharedArray(sharedIslands.size()+4, IslandToInt(island)); // +4 because the first 5 are reserved for the HQs and symmetry type
                  newIslands.remove(0);
                  sharedIslands.add(island);
              }
@@ -219,13 +200,12 @@ public strictfp class RobotPlayer {
         // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
 
-        //init internalMap
+        //! Init internalMap
         for (int i = 0; i < 60; i++) {
             for (int j = 0; j < 60; j++) {
                 internalMap[i][j] = terrainTypes.UNKNOWN;
             }
         }
-
 
         while (true) {
             turnCount += 1;
@@ -233,6 +213,17 @@ public strictfp class RobotPlayer {
             try {                
                 // Init the bots
                 if (turnCount == 1) {
+                    // set ownHQ
+                    if (rc.getType() != RobotType.HEADQUARTERS) {
+                    
+                        RobotInfo[] l = rc.senseNearbyRobots(2);
+                        for (RobotInfo r : l) {
+                            if (r.type == RobotType.HEADQUARTERS) {
+                                ownHQ = r.location;
+                            }
+                        }
+                    }
+
                     switch (rc.getType()) {
                         case HEADQUARTERS: initHeadquarters(rc); break;
                         case CARRIER: initCarrier(rc); break;
@@ -294,18 +285,10 @@ public strictfp class RobotPlayer {
     private static void initCarrier(RobotController rc) throws GameActionException {
         System.out.println("Initiating carrier");
 
-        RobotInfo[] l = rc.senseNearbyRobots(1);
-        for (RobotInfo r : l) {
-            if (r.type == RobotType.HEADQUARTERS) {
-                ownHQ = r.location;
-            }
-        }
-
         MapLocation myLoc = rc.getLocation();
-
         courierDirection = ownHQ.directionTo(myLoc);
 
-        //create a zigzag search path
+        // Create a zigzag search path
         class ZigZagger {
             void createZigZagSearchPath(int x, int y, int xStep, int xStep2, int yStep, int yStep2) {
                 searchPath.add(myLoc.translate(x, y));
@@ -352,7 +335,7 @@ public strictfp class RobotPlayer {
 
         searchPath.remove(0);
         
-        //draw the search path on the map
+        // Draw the search path on the map
         for (int i = 0; i < searchPath.size()-1; i++) {
             MapLocation m = searchPath.get(i);
             MapLocation m2 = searchPath.get(i + 1);
@@ -403,7 +386,8 @@ public strictfp class RobotPlayer {
     static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
         rc.setIndicatorString(currentCourierStatus.toString());
-        if (rc.getAnchor() != null) {
+
+        if (rc.getAnchor() != null) { // TODO
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
             Set<MapLocation> islandLocs = new HashSet<>();
@@ -496,9 +480,8 @@ public strictfp class RobotPlayer {
             if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
                 rc.move(dir);
             }
-            
+           
         }
-        
     }
 
     static void runLauncher(RobotController rc) throws GameActionException {
@@ -516,10 +499,22 @@ public strictfp class RobotPlayer {
             }
         }
 
-        // Also try to move randomly.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
+        // Launcher movement
+        if (enemies.length > 0) {
+            // If there are enemies, move towards them
+            Direction dir = rc.getLocation().directionTo(enemies[0].location);
+            if (rc.canMove(dir)) {
+                rc.move(dir);
+            }
+        } else {
+            // If there are no enemies, move away from own HQ
+            Direction dir = rc.getLocation().directionTo(ownHQ);
+
+            dir = dir.opposite();
+
+            if (rc.canMove(dir)) {
+                rc.move(dir);
+            }
         }
     }
 }
