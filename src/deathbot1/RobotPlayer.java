@@ -14,6 +14,22 @@ import java.lang.Math;
 import deathbot1.Carrier;
 
 public strictfp class RobotPlayer {
+
+    static void dfs(RobotController rc, Direction dir) throws GameActionException {
+        if (rc.canMove(dir)) {
+            rc.move(dir);
+        } else {
+            Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+            for (Direction d : dirs) {
+                if (rc.canMove(d)) {
+                    rc.move(d);
+                    break;
+                }
+            }
+        }
+    }
+
+
     static int turnCount = 0;
 
     static MapLocation ownHQ;
