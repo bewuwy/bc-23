@@ -328,7 +328,7 @@ public strictfp class RobotPlayer {
                 zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
                 break;
             case EAST:
-                zg.createZigZagSearchPath(3, 0, 81, 9, -9, 9);
+                zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
                 break;
             case SOUTHEAST:
                 zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
