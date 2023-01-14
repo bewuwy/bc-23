@@ -85,7 +85,7 @@ public strictfp class RobotPlayer {
         UNKNOWN
     }
 
-    static List<List<terrainTypes>> internalMap = new ArrayList<List<terrainTypes>>();
+    static terrainTypes[][] internalMap = new terrainTypes[64][64];
 
     static List<Island> sharedIslands = new ArrayList<>();
 
@@ -165,25 +165,25 @@ public strictfp class RobotPlayer {
             MapLocation loc = loc_info.getMapLocation();
 
             if(loc_info.hasCloud()) {
-                internalMap.get(loc.x).set(loc.y, terrainTypes.CLOUD);
+                internalMap[loc.x][loc.y] = terrainTypes.CLOUD;
             }
             else if(!loc_info.isPassable()) {
-                internalMap.get(loc.x).set(loc.y, terrainTypes.WALL);
+                internalMap[loc.x][loc. y] = terrainTypes.WALL;
             } else switch(loc_info.getCurrentDirection()) {
                 case NORTH:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_NORTH);
+                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_NORTH;
                     break;
                 case SOUTH:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_SOUTH);
+                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_SOUTH;
                     break;
                 case EAST:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_EAST);
+                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_EAST;
                     break;
                 case WEST:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.CURRENT_WEST);
+                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_WEST;
                     break;
                 case CENTER:
-                    internalMap.get(loc.x).set(loc.y, terrainTypes.NORMAL);
+                    internalMap[loc.x][loc. y] = terrainTypes.NORMAL;
                     break;
                 case NORTHEAST:
                     break;
@@ -221,9 +221,8 @@ public strictfp class RobotPlayer {
 
         //init internalMap
         for (int i = 0; i < 60; i++) {
-            internalMap.add(new ArrayList<terrainTypes>());
             for (int j = 0; j < 60; j++) {
-                internalMap.get(i).add(terrainTypes.UNKNOWN);
+                internalMap[i][j] = terrainTypes.UNKNOWN;
             }
         }
 
