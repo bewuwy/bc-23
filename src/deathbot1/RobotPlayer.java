@@ -11,6 +11,8 @@ import java.util.Set;
 
 import java.lang.Math;
 
+import deathbot1.Carrier;
+
 public strictfp class RobotPlayer {
     static int turnCount = 0;
 
@@ -225,9 +227,9 @@ public strictfp class RobotPlayer {
                     }
 
                     switch (rc.getType()) {
-                        case HEADQUARTERS: initHeadquarters(rc); break;
-                        case CARRIER: initCarrier(rc); break;
-                        case LAUNCHER: initLauncher(rc); break;
+                        case HEADQUARTERS: Headquarters.initHeadquarters(rc); break;
+                        case CARRIER:  Carrier.initCarrier(rc); break;
+                        case LAUNCHER: Launcher.initLauncher(rc); break;
                         case BOOSTER: break; // TODO
                         case DESTABILIZER: break; // TODO
                         case AMPLIFIER: break; // TODO
@@ -237,9 +239,9 @@ public strictfp class RobotPlayer {
                 // Run the bots
                 else {
                     switch (rc.getType()) {
-                        case HEADQUARTERS: runHeadquarters(rc); break;
-                        case CARRIER: runCarrier(rc); break;
-                        case LAUNCHER: runLauncher(rc); break;
+                        case HEADQUARTERS: Headquarters.runHeadquarters(rc); break;
+                        case CARRIER: Carrier.runCarrier(rc); break;
+                        case LAUNCHER: Launcher.runLauncher(rc); break;
                         case BOOSTER: break; // TODO
                         case DESTABILIZER: break; // TODO
                         case AMPLIFIER: break; // TODO
@@ -273,247 +275,6 @@ public strictfp class RobotPlayer {
                 // Signify we've done everything we want to do, thereby ending our turn.
                 // This will make our code wait until the next turn, and then perform this loop again.
                 Clock.yield();
-            }
-        }
-    }
-
-    private static void initHeadquarters(RobotController rc) {
-        System.out.println("Initiating headquarters");
-        ownHQ = rc.getLocation();
-    }
-
-    private static void initCarrier(RobotController rc) throws GameActionException {
-        System.out.println("Initiating carrier");
-
-        MapLocation myLoc = rc.getLocation();
-        courierDirection = ownHQ.directionTo(myLoc);
-
-        // Create a zigzag search path
-        class ZigZagger {
-            void createZigZagSearchPath(int x, int y, int xStep, int xStep2, int yStep, int yStep2) {
-                searchPath.add(myLoc.translate(x, y));
-                searchPath.add(searchPath.get(0));
-                for (int i = 1; i < 20; i += 4) {
-                    searchPath.add(searchPath.get(i).translate(xStep, yStep));
-                    searchPath.add(searchPath.get(i - 1).translate(xStep2, yStep2));
-                    searchPath.add(searchPath.get(i + 2).translate(xStep2, yStep2));
-                    searchPath.add(searchPath.get(i + 1).translate(xStep, yStep));
-                }
-            }
-        }
-
-        ZigZagger zg = new ZigZagger();
-        
-        switch (courierDirection) {
-            case NORTH:
-                zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
-                break;
-            case NORTHEAST:
-                zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
-                break;
-            case EAST:
-                zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
-                break;
-            case SOUTHEAST:
-                zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
-                break;
-            case SOUTH:
-                zg.createZigZagSearchPath(0, -3, -9, 9, -9, -9);
-                break;
-            case SOUTHWEST:
-                zg.createZigZagSearchPath(-3, -3, -12, 0, 0, -12);
-                break;
-            case WEST:
-                zg.createZigZagSearchPath(-3, 0, -9, -9, 9, -9);
-                break;
-            case NORTHWEST:
-                zg.createZigZagSearchPath(-3, 3, 0, -12, 12, 0);
-                break;
-            case CENTER:
-                break;
-        }
-
-        searchPath.remove(0);
-        
-        // Draw the search path on the map
-        for (int i = 0; i < searchPath.size()-1; i++) {
-            MapLocation m = searchPath.get(i);
-            MapLocation m2 = searchPath.get(i + 1);
-            rc.setIndicatorLine(m, m2, 255, 255, 255);
-            rc.setIndicatorString("searchPath: " + m + " " + m2);
-        }
-
-        currentCourierStatus = courierStatus.GATHERING;
-    }
-
-    private static void initLauncher(RobotController rc) {
-
-    }
-
-    static void runHeadquarters(RobotController rc) throws GameActionException {
-        // 4 starting carriers 
-        int wantedCarriers = 4;
-        if (numCarriers <= wantedCarriers) {
-            rc.setIndicatorString("Building starter bots");
-
-            Direction dir = directions[(numCarriers * 2) % 8];
-            MapLocation loc = rc.getLocation().add(dir);
-            
-            rc.buildRobot(RobotType.CARRIER, loc);
-            numCarriers++;
-        }
-
-        // spawning launchers
-        Direction launcher_dir = directions[rng.nextInt(8)];
-        MapLocation launcher_loc = rc.getLocation().add(launcher_dir);
-
-        int wantedLaunchers = (int)(3 * Math.log(rc.getRoundNum()) - 1);
-        if (numLaunchers < wantedLaunchers && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
-            rc.setIndicatorString("Building launchers");
-            
-            rc.buildRobot(RobotType.LAUNCHER, launcher_loc);
-            numLaunchers++;
-        }
-
-        if (sharedIslands.size() > numAnchorsBuilt && rc.canBuildAnchor(Anchor.STANDARD)) {
-            rc.setIndicatorString("Building anchor! " + Anchor.STANDARD);
-        
-            rc.buildAnchor(Anchor.STANDARD);
-            numAnchorsBuilt++;
-        }
-    }
-
-    static void runCarrier(RobotController rc) throws GameActionException {
-        MapLocation myLocation = rc.getLocation();
-        rc.setIndicatorString(currentCourierStatus.toString());
-
-        if (rc.getAnchor() != null) { // TODO
-            // If I have an anchor singularly focus on getting it to the first island I see
-            int[] islands = rc.senseNearbyIslands();
-            Set<MapLocation> islandLocs = new HashSet<>();
-            for (int id : islands) {
-                MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
-                islandLocs.addAll(Arrays.asList(thisIslandLocs));
-            }
-            if (islandLocs.size() > 0) {
-                MapLocation islandLocation = islandLocs.iterator().next();
-                rc.setIndicatorString("Moving my anchor towards " + islandLocation);
-                while (!myLocation.equals(islandLocation)) {
-                    Direction dir = myLocation.directionTo(islandLocation);
-                    if (rc.canMove(dir)) {
-                        rc.move(dir);
-                    }
-                }
-                if (rc.canPlaceAnchor()) {
-                    rc.setIndicatorString("Huzzah, placed anchor!");
-                    rc.placeAnchor();
-                }
-            }
-        }
-
-        if (currentCourierStatus == courierStatus.RETURNING) {
-            Direction dir = myLocation.directionTo(ownHQ);
-            if (rc.canMove(dir)) {
-                rc.move(dir);
-            }
-            if (myLocation.isAdjacentTo(ownHQ)){
-                for (ResourceType t : ResourceType.values()) {
-                    int r =rc.getResourceAmount(t);
-                    if (r > 0) {
-                        rc.transferResource(ownHQ, t, r);;
-                    }
-                }
-                currentCourierStatus = courierStatus.GATHERING;
-            }
-        }
-        
-        // // Occasionally try out the carriers attack
-        // if (rng.nextInt(20) == 1) {
-        //     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        //     if (enemyRobots.length > 0) {
-        //         if (rc.canAttack(enemyRobots[0].location)) {
-        //             rc.attack(enemyRobots[0].location);
-        //         }
-        //     }
-        // }
-        
-        // If know see a well, collect from there
-        if (myWell != null) {
-            if(myLocation.isAdjacentTo(myWell)) { // If we are adjacent to the well
-                if (rc.canCollectResource(myWell, -1)) { // and we can collect from the well
-                    
-                    rc.collectResource(myWell, -1);
-                    rc.setIndicatorString("Collecting, now have, AD:" + 
-                        rc.getResourceAmount(ResourceType.ADAMANTIUM) + 
-                        " MN: " + rc.getResourceAmount(ResourceType.MANA) + 
-                        " EX: " + rc.getResourceAmount(ResourceType.ELIXIR)); 
-                } else {
-                    rc.setIndicatorString("Can't collect from well");
-                    currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to HQ
-                    myWell = rc.getLocation();
-                }
-            } else{
-                // go towards myWell
-                Direction dir = myLocation.directionTo(myWell);
-                if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
-                    rc.move(dir);
-                }
-            }
-        }
-        else {
-            WellInfo[] wells = rc.senseNearbyWells();
-            for (WellInfo well : wells) {
-                Direction dir = myLocation.directionTo(well.getMapLocation());
-                if (dir == courierDirection || dir == courierDirection.rotateRight() || !well.getMapLocation().isWithinDistanceSquared(ownHQ, 20)){
-                    myWell = well.getMapLocation();
-                }
-            }
-            MapLocation m = searchPath.get(0);
-            MapLocation m2 = searchPath.get(1);
-            rc.setIndicatorLine(m, m2, 255, 255, 255);
-            rc.setIndicatorString("searchPath: " + m + " " + m2);
-            // try to go in the set path
-            if(searchPath.get(0).isAdjacentTo(myLocation)) {
-                searchPath.remove(0);
-            }
-            Direction dir = myLocation.directionTo(searchPath.get(0));
-            if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
-                rc.move(dir);
-            }
-           
-        }
-    }
-
-    static void runLauncher(RobotController rc) throws GameActionException {
-        // Try to attack someone
-        int radius = rc.getType().actionRadiusSquared;
-        Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
-        if (enemies.length >= 0) {
-            // MapLocation toAttack = enemies[0].location;
-            MapLocation toAttack = rc.getLocation().add(Direction.EAST);
-
-            if (rc.canAttack(toAttack)) {
-                rc.setIndicatorString("Attacking");        
-                rc.attack(toAttack);
-            }
-        }
-
-        // Launcher movement
-        if (enemies.length > 0) {
-            // If there are enemies, move towards them
-            Direction dir = rc.getLocation().directionTo(enemies[0].location);
-            if (rc.canMove(dir)) {
-                rc.move(dir);
-            }
-        } else {
-            // If there are no enemies, move away from own HQ
-            Direction dir = rc.getLocation().directionTo(ownHQ);
-
-            dir = dir.opposite();
-
-            if (rc.canMove(dir)) {
-                rc.move(dir);
             }
         }
     }
