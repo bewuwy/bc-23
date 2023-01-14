@@ -371,10 +371,10 @@ public strictfp class RobotPlayer {
     static void runHeadquarters(RobotController rc) throws GameActionException {
         // 4 starting carriers 
         int wantedCarriers = 4;
-        if (rc.getRoundNum() <= wantedCarriers) {
+        if (numCarriers <= wantedCarriers) {
             rc.setIndicatorString("Building starter bots");
 
-            Direction dir = directions[(rc.getRoundNum()-1)*2];
+            Direction dir = directions[(numCarriers * 2) % 8];
             MapLocation loc = rc.getLocation().add(dir);
             
             rc.buildRobot(RobotType.CARRIER, loc);
