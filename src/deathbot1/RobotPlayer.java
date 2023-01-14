@@ -28,7 +28,7 @@ public strictfp class RobotPlayer {
         // NOTHING
     };
     static courierStatus currentCourierStatus = courierStatus.GATHERING;
-    static Direction courierDirection;
+    static Direction robotDirection;
     static List<MapLocation> searchPath = new ArrayList<MapLocation>();
     // static MapLocation[] wellsFound;
     static MapLocation myWell = null;
@@ -253,7 +253,7 @@ public strictfp class RobotPlayer {
                     downloadIslands(rc);
 
                     // gather and share information
-                    if (turnCount % 10 == 0) {
+                    if (turnCount % 2 == 0) {
                         scout(rc);
                         shareIslands(rc);
                     }

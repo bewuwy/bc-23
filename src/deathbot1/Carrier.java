@@ -12,7 +12,7 @@ public class Carrier extends RobotPlayer {
         System.out.println("Initiating carrier");
 
         MapLocation myLoc = rc.getLocation();
-        courierDirection = ownHQ.directionTo(myLoc);
+        robotDirection = ownHQ.directionTo(myLoc);
 
         // Create a zigzag search path
         class ZigZagger {
@@ -30,7 +30,7 @@ public class Carrier extends RobotPlayer {
 
         ZigZagger zg = new ZigZagger();
         
-        switch (courierDirection) {
+        switch (robotDirection) {
             case NORTH:
                 zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
                 break;
@@ -74,8 +74,9 @@ public class Carrier extends RobotPlayer {
     
     public static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
-        rc.setIndicatorString(currentCourierStatus.toString());
-
+        if(myWell != null){
+            rc.setIndicatorString(currentCourierStatus.toString() + " " + myLocation.toString() + " is adjacent to well " + myLocation.isAdjacentTo(myWell) + " " + myWell.toString());
+        }
         if (rc.getAnchor() != null) { // TODO
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
@@ -114,7 +115,7 @@ public class Carrier extends RobotPlayer {
                 }
                 currentCourierStatus = courierStatus.GATHERING;
             }
-        }
+        } else {
         
         // // Occasionally try out the carriers attack
         // if (rng.nextInt(20) == 1) {
@@ -127,49 +128,48 @@ public class Carrier extends RobotPlayer {
         // }
         
         // If know see a well, collect from there
-        if (myWell != null) {
-            if(myLocation.isAdjacentTo(myWell)) { // If we are adjacent to the well
-                if (rc.canCollectResource(myWell, -1)) { // and we can collect from the well
-                    
-                    rc.collectResource(myWell, -1);
-                    rc.setIndicatorString("Collecting, now have, AD:" + 
-                        rc.getResourceAmount(ResourceType.ADAMANTIUM) + 
-                        " MN: " + rc.getResourceAmount(ResourceType.MANA) + 
-                        " EX: " + rc.getResourceAmount(ResourceType.ELIXIR)); 
-                } else {
-                    rc.setIndicatorString("Can't collect from well");
-                    currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to HQ
-                    myWell = rc.getLocation();
+                if (myWell != null) {
+                    if(myLocation.isAdjacentTo(myWell)) { // If we are adjacent to the well
+                        if (rc.canCollectResource(myWell, -1)) { // and we can collect from the well
+
+                            rc.collectResource(myWell, -1);
+                            rc.setIndicatorString("Collecting, now have, AD:" + 
+                                rc.getResourceAmount(ResourceType.ADAMANTIUM) + 
+                                " MN: " + rc.getResourceAmount(ResourceType.MANA) + 
+                                " EX: " + rc.getResourceAmount(ResourceType.ELIXIR)); 
+                        } else {
+                            currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to HQ
+                        }
+                    } else{
+                        // go towards myWell
+                        Direction dir = myLocation.directionTo(myWell);
+                        if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
+                            rc.move(dir);
+                        }
+                    }
                 }
-            } else{
-                // go towards myWell
-                Direction dir = myLocation.directionTo(myWell);
-                if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
-                    rc.move(dir);
+                else {
+                    WellInfo[] wells = rc.senseNearbyWells();
+                    for (WellInfo well : wells) {
+                        Direction dir = myLocation.directionTo(well.getMapLocation());
+                        if (dir == robotDirection || dir == robotDirection.rotateRight() || !well.getMapLocation().isWithinDistanceSquared(ownHQ, 20)){
+                            myWell = well.getMapLocation();
+                        }
+                    }
+                    MapLocation m = searchPath.get(0);
+                    MapLocation m2 = searchPath.get(1);
+                    rc.setIndicatorLine(m, m2, 255, 255, 255);
+                    rc.setIndicatorString("searchPath: " + m + " " + m2);
+                    // try to go in the set path
+                    if(searchPath.get(0).isAdjacentTo(myLocation)) {
+                        searchPath.remove(0);
+                    }
+                    Direction dir = myLocation.directionTo(searchPath.get(0));
+                    if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
+                        rc.move(dir);
+                    }
+                
                 }
-            }
-        }
-        else {
-            WellInfo[] wells = rc.senseNearbyWells();
-            for (WellInfo well : wells) {
-                Direction dir = myLocation.directionTo(well.getMapLocation());
-                if (dir == courierDirection || dir == courierDirection.rotateRight() || !well.getMapLocation().isWithinDistanceSquared(ownHQ, 20)){
-                    myWell = well.getMapLocation();
-                }
-            }
-            MapLocation m = searchPath.get(0);
-            MapLocation m2 = searchPath.get(1);
-            rc.setIndicatorLine(m, m2, 255, 255, 255);
-            rc.setIndicatorString("searchPath: " + m + " " + m2);
-            // try to go in the set path
-            if(searchPath.get(0).isAdjacentTo(myLocation)) {
-                searchPath.remove(0);
-            }
-            Direction dir = myLocation.directionTo(searchPath.get(0));
-            if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
-                rc.move(dir);
-            }
-           
         }
     }
 
