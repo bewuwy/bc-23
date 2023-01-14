@@ -8,8 +8,30 @@ import battlecode.common.*;
 
 
 public class Carrier extends RobotPlayer {
+
+    static enum courierStatus {
+        ADAMANTIUM,
+        MANA,
+        GATHERING,
+        ANCHOR,
+        RETURNING,
+        // NOTHING
+    };
+    static courierStatus currentCourierStatus = courierStatus.GATHERING;
+    static MapLocation myWell = null;
+
+    static boolean isAnchorCourier = false;
+    static int targetIslandID = 0;
+    static MapLocation targetIslandLoc = null;
+
     public static void initCarrier(RobotController rc) throws GameActionException {
         System.out.println("Initiating carrier");
+        targetIslandID = rc.readSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX);
+
+        if (targetIslandID != 0) {
+            isAnchorCourier = true;
+            rc.takeAnchor(ownHQ, Anchor.STANDARD);
+        }
 
         MapLocation myLoc = rc.getLocation();
         robotDirection = ownHQ.directionTo(myLoc);
@@ -77,35 +99,47 @@ public class Carrier extends RobotPlayer {
         if(myWell != null){
             rc.setIndicatorString(currentCourierStatus.toString() + " " + myLocation.toString() + " is adjacent to well " + myLocation.isAdjacentTo(myWell) + " " + myWell.toString());
         }
+
+        // ANCHOR BEHAVIOUR
         if (rc.getAnchor() != null) { // TODO
-            // If I have an anchor singularly focus on getting it to the first island I see
-            int[] islands = rc.senseNearbyIslands();
-            Set<MapLocation> islandLocs = new HashSet<>();
-            for (int id : islands) {
-                MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
-                islandLocs.addAll(Arrays.asList(thisIslandLocs));
-            }
-            if (islandLocs.size() > 0) {
-                MapLocation islandLocation = islandLocs.iterator().next();
-                rc.setIndicatorString("Moving my anchor towards " + islandLocation);
-                while (!myLocation.equals(islandLocation)) {
-                    Direction dir = myLocation.directionTo(islandLocation);
-                    if (rc.canMove(dir)) {
-                        rc.move(dir);
+
+            if (targetIslandLoc == null && turnCount >= 2) {
+                
+                // targetIslandLoc = sharedIslands.get(sharedIslands.indexOf(new Island(new MapLocation(0, 0), targetIslandID))).loc;
+                for (Island island : sharedIslands) {
+                    if (island.index == targetIslandID) {
+                        targetIslandLoc = island.loc;
                     }
                 }
-                if (rc.canPlaceAnchor()) {
-                    rc.setIndicatorString("Huzzah, placed anchor!");
-                    rc.placeAnchor();
+            }
+
+            Direction dir = myLocation.directionTo(targetIslandLoc);
+
+            // check if adjacent to target island
+            boolean inTargetIsland = false;
+            for (MapLocation islandLoc : rc.senseNearbyIslandLocations(targetIslandID)) {
+                if(islandLoc.equals(myLocation)){
+                    inTargetIsland = true;
                 }
             }
-        }
 
-        if (currentCourierStatus == courierStatus.RETURNING) {
-            Direction dir = myLocation.directionTo(ownHQ);
-            if (rc.canMove(dir)) {
+            if (inTargetIsland) {
+                rc.setIndicatorString("Adjacent to target island");
+
+                rc.placeAnchor();
+                
+            } else if (dir != null) {
+
                 dfs(rc, dir);
             }
+
+            return;
+        }
+
+        // GATHERING BEHAVIOUR
+        if (currentCourierStatus == courierStatus.RETURNING) {
+            Direction dir = myLocation.directionTo(ownHQ);
+            dfs(rc, dir);
             if (myLocation.isAdjacentTo(ownHQ)){
                 for (ResourceType t : ResourceType.values()) {
                     int r =rc.getResourceAmount(t);
@@ -114,6 +148,7 @@ public class Carrier extends RobotPlayer {
                     }
                 }
                 currentCourierStatus = courierStatus.GATHERING;
+                rc.setIndicatorString("Switching to GATHERING");
             }
         } else {
         
@@ -143,7 +178,7 @@ public class Carrier extends RobotPlayer {
                     } else{
                         // go towards myWell
                         Direction dir = myLocation.directionTo(myWell);
-                        if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
+                        if (currentCourierStatus == courierStatus.GATHERING) {
                             dfs(rc, dir);
                         }
                     }
@@ -161,7 +196,7 @@ public class Carrier extends RobotPlayer {
                         searchPath.remove(0);
                     }
                     Direction dir = myLocation.directionTo(searchPath.get(0));
-                    if (rc.canMove(dir) && currentCourierStatus == courierStatus.GATHERING) {
+                    if (currentCourierStatus == courierStatus.GATHERING) {
                         dfs(rc, dir);
                     }
                 

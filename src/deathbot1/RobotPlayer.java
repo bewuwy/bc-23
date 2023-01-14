@@ -5,49 +5,25 @@ import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import java.lang.Math;
-
-import deathbot1.Carrier;
 
 public strictfp class RobotPlayer {
 
     static void dfs(RobotController rc, Direction dir) throws GameActionException {
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-        } else {
-            Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
-            for (Direction d : dirs) {
-                if (rc.canMove(d)) {
-                    rc.move(d);
-                    break;
-                }
+        Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+        for (Direction d : dirs) {
+            if (rc.canMove(d)) {
+                rc.move(d);
+                break;
             }
         }
     }
 
-
     static int turnCount = 0;
 
-    static MapLocation ownHQ;
-
-    // CARRIER VARS
-    static enum courierStatus {
-        ADAMANTIUM,
-        MANA,
-        GATHERING,
-        ANCHOR,
-        RETURNING,
-        // NOTHING
-    };
-    static courierStatus currentCourierStatus = courierStatus.GATHERING;
     static Direction robotDirection;
     static List<MapLocation> searchPath = new ArrayList<MapLocation>();
-    // static MapLocation[] wellsFound;
-    static MapLocation myWell = null;
+
+    static MapLocation ownHQ;
 
     // HQ VARS
     static int numCarriers = 0;
@@ -90,7 +66,6 @@ public strictfp class RobotPlayer {
 
     static List<Island> newIslands = new ArrayList<>();
 
-
     // Wrapper class for island(map location and index)
     static class Island {
         MapLocation loc;
@@ -99,6 +74,14 @@ public strictfp class RobotPlayer {
         public Island(MapLocation loc, int index) {
             this.loc = loc;
             this.index = index;
+        }
+
+        @Override
+        public String toString() {
+            return "Island{" +
+                    "loc=" + loc +
+                    ", index=" + index +
+                    '}';
         }
 
         //equals method on index
@@ -127,13 +110,19 @@ public strictfp class RobotPlayer {
 
     // Download islands from shared array
     private static void downloadIslands(RobotController rc) throws GameActionException {
-        int i = 0;
+        int i = 1;
         while (sharedIslands.size()+i < 35) {
 
             int island = rc.readSharedArray(sharedIslands.size()+4+i);
             if (island == 0) {
                 break;
             }
+
+            if (sharedIslands.contains(intToIsland(island))) {
+                i++;
+                continue;
+            }
+
             sharedIslands.add(intToIsland(island));
             if(newIslands.contains(intToIsland(island))){
                 newIslands.remove(intToIsland(island));
@@ -145,14 +134,15 @@ public strictfp class RobotPlayer {
     // put newIslands into shared array - should work now
     private static void shareIslands(RobotController rc) throws GameActionException {
         
-         if(rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
-             for (int i = 0; i < newIslands.size(); i++) {
-                 Island island = newIslands.get(0);
-                 rc.writeSharedArray(sharedIslands.size()+4, IslandToInt(island)); // +4 because the first 5 are reserved for the HQs and symmetry type
-                 newIslands.remove(0);
-                 sharedIslands.add(island);
-             }
-         }
+        if (rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
+            for (int i = 0; i < newIslands.size(); i++) {
+                Island island = newIslands.get(0);
+
+                rc.writeSharedArray(sharedIslands.size()+4, IslandToInt(island)); // +4 because the first 5 are reserved for the HQs and symmetry type
+                newIslands.remove(0);
+                sharedIslands.add(island);
+            }
+        }
     }
 
     // look at the terrain around you and save it to the internal map
