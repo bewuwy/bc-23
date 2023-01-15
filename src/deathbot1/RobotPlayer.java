@@ -5,6 +5,7 @@ import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Arrays;
 
 public strictfp class RobotPlayer {
 
