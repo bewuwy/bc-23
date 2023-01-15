@@ -64,8 +64,10 @@ public class Headquarters extends RobotPlayer {
         }
         
         // spawning launchers
-        MapLocation enemyHQ = ownHQ.translate((mapSize[0]/2 - ownHQ.x)* 2, (mapSize[1]/2 - ownHQ.y)* 2);
-        Direction launcher_dir = ownHQ.directionTo(enemyHQ);
+        // MapLocation enemyHQ = ownHQ.translate((mapSize[0]/2 - ownHQ.x)* 2, (mapSize[1]/2 - ownHQ.y)* 2);
+        MapLocation launcherTargetLoc = new MapLocation(mapSize[0] - ownHQ.x, mapSize[1] - ownHQ.y);
+
+        Direction launcher_dir = ownHQ.directionTo(launcherTargetLoc);
         MapLocation launcher_loc = rc.getLocation().add(launcher_dir);
         
         if (rc.getResourceAmount(ResourceType.MANA) >= 160 && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
