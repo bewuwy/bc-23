@@ -84,7 +84,7 @@ public strictfp class RobotPlayer {
         UNKNOWN
     }
 
-    static terrainTypes[][] internalMap = new terrainTypes[64][64];
+    static char[] internalMap = new char[3600];
 
     static List<Island> sharedIslands = new ArrayList<>();
 
@@ -164,25 +164,25 @@ public strictfp class RobotPlayer {
             MapLocation loc = loc_info.getMapLocation();
 
             if(loc_info.hasCloud()) {
-                internalMap[loc.x][loc.y] = terrainTypes.CLOUD;
+                internalMap[loc.x*60 + loc.y] = 'c';
             }
             else if(!loc_info.isPassable()) {
-                internalMap[loc.x][loc. y] = terrainTypes.WALL;
+                internalMap[loc.x*60 + loc.y] = 'b';
             } else switch(loc_info.getCurrentDirection()) {
                 case NORTH:
-                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_NORTH;
+                internalMap[loc.x*60 + loc.y] = 'n';
                     break;
                 case SOUTH:
-                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_SOUTH;
+                internalMap[loc.x*60 + loc.y] = 's';
                     break;
                 case EAST:
-                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_EAST;
+                internalMap[loc.x*60 + loc.y] = 'e';
                     break;
                 case WEST:
-                    internalMap[loc.x][loc. y] = terrainTypes.CURRENT_WEST;
+                internalMap[loc.x*60 + loc.y] = 'w';
                     break;
                 case CENTER:
-                    internalMap[loc.x][loc. y] = terrainTypes.NORMAL;
+                internalMap[loc.x*60 + loc.y] = 'n';
                     break;
                 case NORTHEAST:
                     break;
@@ -219,11 +219,7 @@ public strictfp class RobotPlayer {
         rc.setIndicatorString("Hello world!");
 
         //! Init internalMap
-        for (int i = 0; i < 60; i++) {
-            for (int j = 0; j < 60; j++) {
-                internalMap[i][j] = terrainTypes.UNKNOWN;
-            }
-        }
+        
 
         while (true) {
             turnCount += 1;
@@ -266,10 +262,13 @@ public strictfp class RobotPlayer {
                     // End of turn actions
 
                     // download new islands
+                    if(turnCount == 1){
+                        Arrays.fill(internalMap, 'u');
+                    }
                     downloadIslands(rc);
 
                     // gather and share information
-                    if (turnCount % 2 == 0) {
+                    if (turnCount % 3 == 1) {
                         scout(rc);
                         shareIslands(rc);
                     }
