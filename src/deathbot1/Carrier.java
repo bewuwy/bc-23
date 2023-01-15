@@ -8,6 +8,129 @@ import battlecode.common.*;
 
 
 public class Carrier extends RobotPlayer {
+    static class ZigZagger {
+
+        MapLocation myLoc;
+
+        public ZigZagger(MapLocation myLoc) {
+            this.myLoc = myLoc;
+        }
+
+        void createZigZagSearchPath(int x, int y, int xStep, int xStep2, int yStep, int yStep2) {
+            searchPath.add(myLoc.translate(x, y));
+            searchPath.add(searchPath.get(0));
+            MapLocation nextLoc;
+            boolean isDone = false;
+            for (int i = 1; i < 20; i += 4) {
+                nextLoc = searchPath.get(i).translate(xStep, yStep);
+                if (nextLoc.x > mapSize[0]){
+                    nextLoc = new MapLocation(mapSize[0], nextLoc.y);
+                    isDone = true;
+                }
+
+                if (nextLoc.y > mapSize[1]){
+                    nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
+                    isDone = true;
+                }
+
+                if(nextLoc.x < 0){
+                    nextLoc = new MapLocation(0, nextLoc.y);
+                    isDone = true;
+                }
+                    
+                if(nextLoc.y < 0){
+                    nextLoc = new MapLocation(nextLoc.x, 0);
+                    isDone = true;
+                }
+                searchPath.add(nextLoc);
+                if (isDone){
+                    break;
+                }
+                
+                nextLoc  = searchPath.get(i - 1).translate(xStep2, yStep2);
+                if (nextLoc.x > mapSize[0]){
+                    nextLoc = new MapLocation(mapSize[0], nextLoc.y);
+                    isDone = true;
+                }
+
+                if (nextLoc.y > mapSize[1]){
+                    nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
+                    isDone = true;
+                }
+
+                if(nextLoc.x < 0){
+                    nextLoc = new MapLocation(0, nextLoc.y);
+                    isDone = true;
+                }
+
+                if(nextLoc.y < 0){
+                    nextLoc = new MapLocation(nextLoc.x, 0);
+                    isDone = true;
+                }
+
+                searchPath.add(nextLoc);
+                if (isDone){
+                    break;
+                }
+                nextLoc = searchPath.get(i + 2).translate(xStep2, yStep2);
+
+                if (nextLoc.x > mapSize[0]){
+                    nextLoc = new MapLocation(mapSize[0], nextLoc.y);
+                    isDone = true;
+                }
+
+                if (nextLoc.y > mapSize[1]){
+                    nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
+                    isDone = true;
+                }
+
+                if(nextLoc.x < 0){
+                    nextLoc = new MapLocation(0, nextLoc.y);
+                    isDone = true;
+                }
+
+                if(nextLoc.y < 0){
+                    nextLoc = new MapLocation(nextLoc.x, 0);
+                    isDone = true;
+                }
+
+                searchPath.add(nextLoc);
+
+                if (isDone){
+                    break;
+                }
+
+                nextLoc = searchPath.get(i + 1).translate(xStep, yStep);
+
+                if (nextLoc.x > mapSize[0]){
+                    nextLoc = new MapLocation(mapSize[0], nextLoc.y);
+                    isDone = true;
+                }
+
+                if (nextLoc.y > mapSize[1]){
+                    nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
+                    isDone = true;
+                }
+
+                if(nextLoc.x < 0){
+                    nextLoc = new MapLocation(0, nextLoc.y);
+                    isDone = true;
+                }
+
+                if(nextLoc.y < 0){
+                    nextLoc = new MapLocation(nextLoc.x, 0);
+                    isDone = true;
+                }
+
+                searchPath.add(nextLoc);
+
+                if (isDone){
+                    break;
+                }
+                
+            }
+        }
+    }
 
     static enum courierStatus {
         ADAMANTIUM,
@@ -37,124 +160,9 @@ public class Carrier extends RobotPlayer {
         robotDirection = ownHQ.directionTo(myLoc);
 
         // Create a zigzag search path
-        class ZigZagger {
-            void createZigZagSearchPath(int x, int y, int xStep, int xStep2, int yStep, int yStep2) {
-                searchPath.add(myLoc.translate(x, y));
-                searchPath.add(searchPath.get(0));
-                MapLocation nextLoc;
-                boolean isDone = false;
-                for (int i = 1; i < 20; i += 4) {
-                    nextLoc = searchPath.get(i).translate(xStep, yStep);
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
+        
 
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-                        
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-                    searchPath.add(nextLoc);
-                    if (isDone){
-                        break;
-                    }
-                    
-                    nextLoc  = searchPath.get(i - 1).translate(xStep2, yStep2);
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-
-                    searchPath.add(nextLoc);
-                    if (isDone){
-                        break;
-                    }
-                    nextLoc = searchPath.get(i + 2).translate(xStep2, yStep2);
-
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-
-                    searchPath.add(nextLoc);
-
-                    if (isDone){
-                        break;
-                    }
-
-                    nextLoc = searchPath.get(i + 1).translate(xStep, yStep);
-
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-
-                    searchPath.add(nextLoc);
-
-                    if (isDone){
-                        break;
-                    }
-                    
-                }
-            }
-        }
-
-        ZigZagger zg = new ZigZagger();
+        ZigZagger zg = new ZigZagger(myLoc);
         
         switch (robotDirection) {
             case NORTH:
@@ -298,6 +306,42 @@ public class Carrier extends RobotPlayer {
                     // try to go in the set path
                     if(searchPath.get(0).isAdjacentTo(myLocation)) {
                         searchPath.remove(0);
+                    }
+                    if (searchPath.size() == 0) {
+
+                        // if we are at the end of the path, go to the center of the map
+                        robotDirection = myLocation.directionTo(new MapLocation(mapSize[0]/2, mapSize[1]/2));
+
+                        ZigZagger zg = new ZigZagger(myLocation);
+
+                        switch (robotDirection) {
+                            case NORTH:
+                                zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
+                                break;
+                            case NORTHEAST:
+                                zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
+                                break;
+                            case EAST:
+                                zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
+                                break;
+                            case SOUTHEAST:
+                                zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
+                                break;
+                            case SOUTH:
+                                zg.createZigZagSearchPath(0, -3, -9, 9, -9, -9);
+                                break;
+                            case SOUTHWEST:
+                                zg.createZigZagSearchPath(-3, -3, -12, 0, 0, -12);
+                                break;
+                            case WEST:
+                                zg.createZigZagSearchPath(-3, 0, -9, -9, 9, -9);
+                                break;
+                            case NORTHWEST:
+                                zg.createZigZagSearchPath(-3, 3, 0, -12, 12, 0);
+                                break;
+                            case CENTER:
+                                break;
+                        }
                     }
                     Direction dir = myLocation.directionTo(searchPath.get(0));
                     if (currentCourierStatus == courierStatus.GATHERING) {

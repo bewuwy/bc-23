@@ -9,12 +9,32 @@ import java.util.Arrays;
 
 public strictfp class RobotPlayer {
 
+
+    static Direction lastDfs;
+
     static void dfs(RobotController rc, Direction dir) throws GameActionException {
-        Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
-        for (Direction d : dirs) {
-            if (rc.canMove(d)) {
-                rc.move(d);
-                break;
+        if (rc.canMove(dir)) {
+            rc.move(dir);
+            lastDfs = dir;
+        } else {
+            if (lastDfs != null) {
+                Direction[] dirs = {lastDfs, lastDfs.rotateLeft(), lastDfs.rotateRight(), lastDfs.rotateLeft().rotateLeft(), lastDfs.rotateRight().rotateRight()};
+                for (Direction d : dirs) {
+                    if (rc.canMove(d)) {
+                        rc.move(d);
+                        lastDfs = d;
+                        break;
+                    }
+                }
+            } else{
+                Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+                for (Direction d : dirs) {
+                    if (rc.canMove(d)) {
+                        rc.move(d);
+                        lastDfs = d;
+                        break;
+                    }
+                }
             }
         }
     }
@@ -100,7 +120,7 @@ public strictfp class RobotPlayer {
             return i.index == this.index;
         }
     }
-
+    // TODO: include map symmetry type in shared array
     // Convert an Island to an integer for use in the shared array
     private static int IslandToInt(Island island) {
         return (island.index << 11) + (island.loc.x << 5) + island.loc.y%32;
