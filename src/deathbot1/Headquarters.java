@@ -21,6 +21,7 @@ public class Headquarters extends RobotPlayer {
             for (int i = 0; i < 8; i++) {
                 if (rc.canBuildRobot(RobotType.CARRIER, rc.getLocation().add(dir))) {
                     rc.buildRobot(RobotType.CARRIER, rc.getLocation().add(dir));
+                    buyCarrierNextRound = false;
                     break;
                 }
                 dir = dir.rotateLeft();
