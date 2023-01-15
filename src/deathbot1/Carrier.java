@@ -83,13 +83,13 @@ public class Carrier extends RobotPlayer {
 
         searchPath.remove(0);
         
-        // Draw the search path on the map
-        for (int i = 0; i < searchPath.size()-1; i++) {
-            MapLocation m = searchPath.get(i);
-            MapLocation m2 = searchPath.get(i + 1);
-            rc.setIndicatorLine(m, m2, 255, 255, 255);
-            rc.setIndicatorString("searchPath: " + m + " " + m2);
-        }
+        // // Draw the search path on the map
+        // for (int i = 0; i < searchPath.size()-1; i++) {
+        //     MapLocation m = searchPath.get(i);
+        //     MapLocation m2 = searchPath.get(i + 1);
+        //     rc.setIndicatorLine(m, m2, 255, 255, 255);
+        //     rc.setIndicatorString("searchPath: " + m + " " + m2);
+        // }
 
         currentCourierStatus = courierStatus.GATHERING;
     }
@@ -187,7 +187,7 @@ public class Carrier extends RobotPlayer {
                     WellInfo[] wells = rc.senseNearbyWells();
                     for (WellInfo well : wells) {
                         Direction dir = myLocation.directionTo(well.getMapLocation());
-                        if (dir == robotDirection || dir == robotDirection.rotateRight() || !well.getMapLocation().isWithinDistanceSquared(ownHQ, 20)){
+                        if (dir == robotDirection || dir == robotDirection.rotateRight() || dir == robotDirection.rotateRight().rotateRight() || !well.getMapLocation().isWithinDistanceSquared(ownHQ, 20)){
                             myWell = well.getMapLocation();
                         }
                     }
