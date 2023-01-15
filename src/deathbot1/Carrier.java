@@ -147,7 +147,7 @@ public class Carrier extends RobotPlayer {
         
         // If know see a well, collect from there
                 if (myWell != null) {
-                    if(myLocation.isAdjacentTo(myWell)) { // If we are adjacent to the well
+                    if (myLocation.isAdjacentTo(myWell)) { // If we are adjacent to the well
                         if (rc.canCollectResource(myWell, -1)) { // and we can collect from the well
 
                             rc.collectResource(myWell, -1);
@@ -158,10 +158,12 @@ public class Carrier extends RobotPlayer {
                         } else {
                             currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to HQ
                         }
-                    } else{
+                    } else {
                         // go towards myWell
                         Direction dir = myLocation.directionTo(myWell);
                         if (currentCourierStatus == courierStatus.GATHERING) {
+                            dfs(rc, dir);
+                            dir = myLocation.directionTo(myWell);
                             dfs(rc, dir);
                         }
                     }
@@ -170,10 +172,11 @@ public class Carrier extends RobotPlayer {
                     WellInfo[] wells = rc.senseNearbyWells();
                     for (WellInfo well : wells) {
                         Direction dir = myLocation.directionTo(well.getMapLocation());
-                        if (well.getResourceType() == ResourceType.MANA || rc.getRoundNum() > 400){
+                        if (true){
                             myWell = well.getMapLocation();
                         }
                     }
+
                     // try to go in the set path
                     if (searchPath.size() == 0) {
                         
@@ -211,9 +214,12 @@ public class Carrier extends RobotPlayer {
                                 break;
                             }
                         }
-
                         
                         Direction dir = myLocation.directionTo(searchPath.get(0));
+                        if (currentCourierStatus == courierStatus.GATHERING) {
+                            dfs(rc, dir);
+                        }
+                        dir = myLocation.directionTo(searchPath.get(0));
                         if (currentCourierStatus == courierStatus.GATHERING) {
                             dfs(rc, dir);
                         }

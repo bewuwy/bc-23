@@ -133,7 +133,6 @@ public strictfp class RobotPlayer {
         }
     }
 
-
     static Direction lastDfs;
 
     static void dfs(RobotController rc, Direction dir) throws GameActionException {
@@ -381,7 +380,7 @@ public strictfp class RobotPlayer {
                     // set ownHQ
                     if (rc.getType() != RobotType.HEADQUARTERS) {
                     
-                        RobotInfo[] l = rc.senseNearbyRobots(2);
+                        RobotInfo[] l = rc.senseNearbyRobots(-1);
                         for (RobotInfo r : l) {
                             if (r.type == RobotType.HEADQUARTERS) {
                                 ownHQ = r.location;

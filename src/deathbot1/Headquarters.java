@@ -4,10 +4,45 @@ import battlecode.common.*;
 
 public class Headquarters extends RobotPlayer {
 
-    
-
     static boolean buyCarrierNextRound = false;
     static Island islandToAttack = null;
+
+    public static boolean spawnBot(RobotController rc, MapLocation hq_loc, Direction dir, RobotType type) throws GameActionException {
+        rc.setIndicatorString("Building" + type);
+        
+        MapLocation robotSpawnLocation = hq_loc.add(dir);
+        boolean canBuild = rc.canBuildRobot(type, robotSpawnLocation);
+        
+        MapInfo[] nearby = rc.senseNearbyMapInfos(robotSpawnLocation, 1);
+
+        MapLocation mapLoc;
+
+        for (MapInfo mapInfo : nearby) {
+            
+            mapLoc = mapInfo.getMapLocation();
+
+            canBuild = rc.canBuildRobot(type, mapLoc);
+
+            if (canBuild) {                
+                rc.buildRobot(type, mapLoc);
+
+                switch (type) {
+                    case LAUNCHER:
+                        numLaunchers++;
+                        break;
+                    case CARRIER:
+                        numCarriers++;
+                        break;
+                    default:
+                        break;
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
     
     public  static void initHeadquarters(RobotController rc) throws GameActionException {
         // System.out.println("Initiating headquarters");
@@ -49,9 +84,9 @@ public class Headquarters extends RobotPlayer {
             buyCarrierNextRound = false;
         }
 
-        // 4 starting carriers 
+        //! 4 starting carriers 
         Direction dir_carrier = directions[(numCarriers * 2) % 8];
-        MapLocation loc_carrier = rc.getLocation().add(dir_carrier);
+        MapLocation loc_carrier = rc.getLocation().add(dir_carrier).add(dir_carrier);
 
         int wantedCarriers = 4;
         if (numCarriers <= wantedCarriers && rc.canBuildRobot(RobotType.CARRIER, loc_carrier)) {
@@ -60,12 +95,12 @@ public class Headquarters extends RobotPlayer {
             rc.buildRobot(RobotType.CARRIER, loc_carrier);
             numCarriers++;
         }
-        // building anchors
+        
+        //! building anchors
         if (sharedIslands.size() > numAnchorsBuilt &&
-                rc.canBuildAnchor(Anchor.STANDARD) && 
+                rc.canBuildAnchor(Anchor.STANDARD) &&
                 rc.getResourceAmount(ResourceType.ADAMANTIUM) >= (50 + 100) && 
-                rc.getResourceAmount(ResourceType.MANA) >= 100 &&
-                rc.getRoundNum() >= 400) {
+                rc.getResourceAmount(ResourceType.MANA) >= 100) {
 
             System.out.println("Building anchor nr" + numAnchorsBuilt + "; Shared islands size: " + sharedIslands.size());
             
@@ -78,19 +113,15 @@ public class Headquarters extends RobotPlayer {
             numAnchorsBuilt++;
         }
         
-        // spamming launchers
-        // MapLocation enemyHQ = ownHQ.translate((mapSize[0]/2 - ownHQ.x)* 2, (mapSize[1]/2 - ownHQ.y)* 2);
+        //! spamming launchers and carriers
         MapLocation launcherTargetLoc = new MapLocation(mapSize[0] - ownHQ.x, mapSize[1] - ownHQ.y);
 
-        Direction launcher_dir = ownHQ.directionTo(launcherTargetLoc);
-        MapLocation launcher_loc = rc.getLocation().add(launcher_dir);
-        
-        if (rc.getResourceAmount(ResourceType.MANA) >= 160 && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
-            rc.setIndicatorString("Building launchers");
-            
-            rc.buildRobot(RobotType.LAUNCHER, launcher_loc);
-            numLaunchers++;
+        Direction dir_launcher = ownHQ.directionTo(launcherTargetLoc);
+
+        if (numCarriers > 4 && rc.getRoundNum() % 2 == 0) { // build launchers on even rounds
+            spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
+        } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= Consts.MAX_CARRIERS) {
+            spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }
     }
-
 }
