@@ -19,6 +19,8 @@ public strictfp class RobotPlayer {
         }
     }
 
+    static int[] mapSize = new int[2];
+
     static int turnCount = 0;
 
     static Direction robotDirection;
@@ -211,6 +213,8 @@ public strictfp class RobotPlayer {
 
         //! Init internalMap
         
+        mapSize[0] = rc.getMapWidth();
+        mapSize[1] = rc.getMapHeight();
 
         while (true) {
             turnCount += 1;
