@@ -171,6 +171,7 @@ public strictfp class RobotPlayer {
     static List<MapLocation> searchPath = new ArrayList<MapLocation>();
 
     static MapLocation ownHQ;
+    static boolean returnToHQ = false;
 
     // HQ VARS
     static int numCarriers = 0;
@@ -246,46 +247,57 @@ public strictfp class RobotPlayer {
     }
     // TODO: include map symmetry type in shared array
     // Convert an Island to an integer for use in the shared array
-    private static int IslandToInt(Island island) {
-        return (island.index << 11) + (island.loc.x << 5) + island.loc.y%32;
+    static int islandToInt(Island island) {
+        return  (island.loc.x << 6) + island.loc.y;
     }
 
     // Convert an integer to a Island for use in the internal map
-    private static Island intToIsland(int loc) {
-        return new Island(new MapLocation(loc >> 5 & 0x3F, loc & 0x20), loc >> 12);
+    static Island intToIsland(int int_val, int index) {
+        return new Island(new MapLocation(int_val >>> 6 & 63, int_val & 63), index);
     }
 
     // Download islands from shared array
     private static void downloadIslands(RobotController rc) throws GameActionException {
         int i = 1;
-        while (sharedIslands.size()+i < 35) {
-
-            int island = rc.readSharedArray(sharedIslands.size()+4+i);
+        while (i < 36) {
+            
+            int island = rc.readSharedArray(i);
             if (island == 0) {
                 break;
             }
 
-            if (sharedIslands.contains(intToIsland(island))) {
+            // System.out.println("Downloading islands: " + island + " " + i);
+            // //print shared islands size
+            // System.out.println("Shared Islands Size: " + sharedIslands.size());
+            
+            if (sharedIslands.contains(intToIsland(island, i))) {
                 i++;
                 continue;
             }
 
-            sharedIslands.add(intToIsland(island));
-            if(newIslands.contains(intToIsland(island))){
-                newIslands.remove(intToIsland(island));
+            sharedIslands.add(intToIsland(island, i));
+            if(newIslands.contains(intToIsland(island, i))){
+                newIslands.remove(intToIsland(island, i));
             }
+
             i++;
         }
     }
 
-    // put newIslands into shared array - should work now
+    // put newIslands into shared array - should work *now*
     private static void shareIslands(RobotController rc) throws GameActionException {
         
         if (rc.canWriteSharedArray(0, 0)) { // testing if we can write to the shared array
+
             for (int i = 0; i < newIslands.size(); i++) {
                 Island island = newIslands.get(0);
 
-                rc.writeSharedArray(sharedIslands.size()+4, IslandToInt(island)); // +4 because the first 5 are reserved for the HQs and symmetry type
+                // if (sharedIslands.contains(island)) {
+                //     newIslands.remove(0);
+                //     continue;
+                // }
+
+                rc.writeSharedArray(island.index, islandToInt(island));
                 newIslands.remove(0);
                 sharedIslands.add(island);
             }
@@ -350,7 +362,7 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-        System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
+        // System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
 
         // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
@@ -411,12 +423,13 @@ public strictfp class RobotPlayer {
                         scout(rc);
 
                         // if can't share, go back to HQ
-                        if (!rc.canWriteSharedArray(0, 0) && newIslands.size() > 0) {
+                        if (!rc.canWriteSharedArray(0, 0) && newIslands.size() > 0 && rc.getType() == RobotType.LAUNCHER) {
 
-                            if (rc.getType() != RobotType.HEADQUARTERS) {
-                                rc.setIndicatorString("Going back to HQ to share islands");
-                                rc.move(ownHQ.directionTo(rc.getLocation()));
-                            }
+                            rc.setIndicatorString("Going back to HQ to share islands");
+
+                            returnToHQ = true;
+                        } else {
+                            returnToHQ = false;
                         }
 
                         shareIslands(rc);
@@ -426,14 +439,14 @@ public strictfp class RobotPlayer {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
                 // handle GameActionExceptions judiciously, in case unexpected events occur in the game
                 // world. Remember, uncaught exceptions cause your robot to explode!
-                //System.out.println(rc.getType() + " Exception");
-                //e.printStackTrace();
+                System.out.println(rc.getType() + " Exception");
+                e.printStackTrace();
 
             } catch (Exception e) {
                 // Oh no! It looks like our code tried to do something bad. This isn't a
                 // GameActionException, so it's more likely to be a bug in our code.
-                //System.out.println(rc.getType() + " Exception");
-                //e.printStackTrace();
+                System.out.println(rc.getType() + " Exception");
+                e.printStackTrace();
 
             } finally {
                 // Signify we've done everything we want to do, thereby ending our turn.

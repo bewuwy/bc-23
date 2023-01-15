@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Launcher extends RobotPlayer {
     public static void initLauncher(RobotController rc) throws GameActionException {
-        System.out.println("Initiating carrier");
+        // System.out.println("Initiating launcher");
 
         MapLocation myLoc = rc.getLocation();
         robotDirection = ownHQ.directionTo(myLoc);
@@ -66,6 +66,11 @@ public class Launcher extends RobotPlayer {
             // If there are enemies, move towards them
             Direction dir = myLocation.directionTo(enemies[0].location);
             dfs(rc, dir);
+        } else if (returnToHQ) {
+
+            // If we are returning to HQ, move towards HQ
+            Direction dir = myLocation.directionTo(ownHQ);
+            dfs(rc, dir);      
         } else {
 
             // // try to go in the set path

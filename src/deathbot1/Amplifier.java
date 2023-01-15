@@ -3,7 +3,10 @@ package deathbot1;
 import battlecode.common.*;
 
 public class Amplifier {
-    static void initAmplifier(){
+    public static void initAmplifier(RobotController rc) throws GameActionException{
+        System.out.println("Initiating amplifier");
+
+
 
     }
 

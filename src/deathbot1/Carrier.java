@@ -5,7 +5,6 @@ import battlecode.common.*;
 
 public class Carrier extends RobotPlayer {
     
-
     static enum courierStatus {
         ADAMANTIUM,
         MANA,
@@ -18,14 +17,21 @@ public class Carrier extends RobotPlayer {
     static MapLocation myWell = null;
 
     static boolean isAnchorCourier = false;
-    static int targetIslandID = 0;
-    static MapLocation targetIslandLoc = null;
+    static Island targetIsland;
 
     public static void initCarrier(RobotController rc) throws GameActionException {
-        System.out.println("Initiating carrier");
-        targetIslandID = rc.readSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX);
+        // System.out.println("Initiating carrier");
 
-        if (targetIslandID != 0) {
+        int targetIslandIndex = rc.readSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX);
+
+        if (targetIslandIndex != 0) {
+
+            // targetIslandID loaded, clear it
+            targetIsland = intToIsland(rc.readSharedArray(targetIslandIndex), targetIslandIndex);
+            rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, 0);
+        }
+
+        if (targetIsland != null) {
             isAnchorCourier = true;
             rc.takeAnchor(ownHQ, Anchor.STANDARD);
         }
@@ -88,21 +94,13 @@ public class Carrier extends RobotPlayer {
         // ANCHOR BEHAVIOUR
         if (rc.getAnchor() != null) { // TODO
 
-            if (targetIslandLoc == null && turnCount >= 2) {
-                
-                // targetIslandLoc = sharedIslands.get(sharedIslands.indexOf(new Island(new MapLocation(0, 0), targetIslandID))).loc;
-                for (Island island : sharedIslands) {
-                    if (island.index == targetIslandID) {
-                        targetIslandLoc = island.loc;
-                    }
-                }
-            }
+            rc.setIndicatorString("si size: " + sharedIslands.size() + " island: " + targetIsland);
 
-            Direction dir = myLocation.directionTo(targetIslandLoc);
+            Direction dir = myLocation.directionTo(targetIsland.loc);
 
             // check if adjacent to target island
             boolean inTargetIsland = false;
-            for (MapLocation islandLoc : rc.senseNearbyIslandLocations(targetIslandID)) {
+            for (MapLocation islandLoc : rc.senseNearbyIslandLocations(targetIsland.index)) {
                 if(islandLoc.equals(myLocation)){
                     inTargetIsland = true;
                 }
@@ -172,31 +170,28 @@ public class Carrier extends RobotPlayer {
                     WellInfo[] wells = rc.senseNearbyWells();
                     for (WellInfo well : wells) {
                         Direction dir = myLocation.directionTo(well.getMapLocation());
-                        if (well.getResourceType() == ResourceType.MANA){
+                        if (well.getResourceType() == ResourceType.MANA || rc.getRoundNum() > 400){
                             myWell = well.getMapLocation();
                         }
                     }
                     // try to go in the set path
-                    if(searchPath.get(0).isAdjacentTo(myLocation)) {
-                        searchPath.remove(0);
-                    }
                     if (searchPath.size() == 0) {
-
+                        
                         // if we are at the end of the path, go to the center of the map
                         robotDirection = myLocation.directionTo(new MapLocation(mapSize[0]/2, mapSize[1]/2));
-
+                        
                         ZigZagger zg = new ZigZagger(myLocation);
-
+                        
                         switch (robotDirection) {
                             case NORTH:
-                                zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
-                                break;
+                            zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
+                            break;
                             case NORTHEAST:
-                                zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
-                                break;
+                            zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
+                            break;
                             case EAST:
-                                zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
-                                break;
+                            zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
+                            break;
                             case SOUTHEAST:
                                 zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
                                 break;
@@ -204,25 +199,31 @@ public class Carrier extends RobotPlayer {
                                 zg.createZigZagSearchPath(0, -3, -9, 9, -9, -9);
                                 break;
                             case SOUTHWEST:
-                                zg.createZigZagSearchPath(-3, -3, -12, 0, 0, -12);
-                                break;
+                            zg.createZigZagSearchPath(-3, -3, -12, 0, 0, -12);
+                            break;
                             case WEST:
                                 zg.createZigZagSearchPath(-3, 0, -9, -9, 9, -9);
                                 break;
-                            case NORTHWEST:
+                                case NORTHWEST:
                                 zg.createZigZagSearchPath(-3, 3, 0, -12, 12, 0);
                                 break;
-                            case CENTER:
+                                case CENTER:
                                 break;
+                            }
                         }
+
+                        
+                        Direction dir = myLocation.directionTo(searchPath.get(0));
+                        if (currentCourierStatus == courierStatus.GATHERING) {
+                            dfs(rc, dir);
+                        }
+                        
+                        if(searchPath.get(0).isAdjacentTo(myLocation)) {
+                            searchPath.remove(0);
+                        }
+                        
                     }
-                    Direction dir = myLocation.directionTo(searchPath.get(0));
-                    if (currentCourierStatus == courierStatus.GATHERING) {
-                        dfs(rc, dir);
-                    }
-                
-                }
         }
     }
-
+    
 }

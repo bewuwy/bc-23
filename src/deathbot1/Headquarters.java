@@ -10,11 +10,25 @@ public class Headquarters extends RobotPlayer {
     static Island islandToAttack = null;
     
     public  static void initHeadquarters(RobotController rc) throws GameActionException {
-        System.out.println("Initiating headquarters");
+        // System.out.println("Initiating headquarters");
         ownHQ = rc.getLocation();
     }
     
     public static void runHeadquarters(RobotController rc) throws GameActionException {
+
+        // System.out.println("turn " + rc.getRoundNum() + " HQ " + rc.getLocation());
+        // // print shared array
+        // for (int i = 0; i < 64; i++) {
+        //     System.out.println("Shared array " + i + " " + rc.readSharedArray(i));
+        // }
+
+        // print shared islands
+        String sharedIslandsString = "";
+        for (Island island : sharedIslands) {
+            sharedIslandsString += island.index + ";";
+        }
+        rc.setIndicatorString("shared islands: " +  sharedIslandsString);
+
         // buy carrier with an anchor
         if (buyCarrierNextRound) {
             Island islandToAttack = sharedIslands.get(numAnchorsBuilt - 1);
@@ -50,9 +64,10 @@ public class Headquarters extends RobotPlayer {
         if (sharedIslands.size() > numAnchorsBuilt &&
                 rc.canBuildAnchor(Anchor.STANDARD) && 
                 rc.getResourceAmount(ResourceType.ADAMANTIUM) >= (50 + 100) && 
-                rc.getResourceAmount(ResourceType.MANA) >= 100) {
+                rc.getResourceAmount(ResourceType.MANA) >= 100 &&
+                rc.getRoundNum() >= 400) {
 
-            System.out.println("Shared islands size " + sharedIslands.size() + " num anchors built " + numAnchorsBuilt);
+            System.out.println("Building anchor nr" + numAnchorsBuilt + "; Shared islands size: " + sharedIslands.size());
             
             rc.setIndicatorString("Building anchor! " + Anchor.STANDARD);
             
@@ -63,7 +78,7 @@ public class Headquarters extends RobotPlayer {
             numAnchorsBuilt++;
         }
         
-        // spawning launchers
+        // spamming launchers
         // MapLocation enemyHQ = ownHQ.translate((mapSize[0]/2 - ownHQ.x)* 2, (mapSize[1]/2 - ownHQ.y)* 2);
         MapLocation launcherTargetLoc = new MapLocation(mapSize[0] - ownHQ.x, mapSize[1] - ownHQ.y);
 
@@ -73,7 +88,7 @@ public class Headquarters extends RobotPlayer {
         if (rc.getResourceAmount(ResourceType.MANA) >= 160 && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
             rc.setIndicatorString("Building launchers");
             
-            rc.buildRobot(RobotType.LAUNCHER, launcher_loc); // TODO: make them useful
+            rc.buildRobot(RobotType.LAUNCHER, launcher_loc);
             numLaunchers++;
         }
     }
