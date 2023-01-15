@@ -64,7 +64,7 @@ public class Headquarters extends RobotPlayer {
         }
         rc.setIndicatorString("shared islands: " +  sharedIslandsString);
 
-        // buy carrier with an anchor
+        //! buy carrier with an anchor
         if (buyCarrierNextRound) {
             Island islandToAttack = sharedIslands.get(numAnchorsBuilt - 1);
 
@@ -79,6 +79,7 @@ public class Headquarters extends RobotPlayer {
             }
             
             rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, islandToAttack.index);
+            rc.writeSharedArray(Consts.CARRIER_ANCHOR_HQ_ID, rc.getID());
 
             numCarriers++;
             buyCarrierNextRound = false;
@@ -109,7 +110,6 @@ public class Headquarters extends RobotPlayer {
             rc.buildAnchor(Anchor.STANDARD);
 
             buyCarrierNextRound = true;
-
             numAnchorsBuilt++;
         }
         
