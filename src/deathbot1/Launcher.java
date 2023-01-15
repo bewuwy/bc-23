@@ -10,124 +10,8 @@ public class Launcher extends RobotPlayer {
         robotDirection = ownHQ.directionTo(myLoc);
 
         // Create a zigzag search path
-        class ZigZagger {
-            void createZigZagSearchPath(int x, int y, int xStep, int xStep2, int yStep, int yStep2) {
-                searchPath.add(myLoc.translate(x, y));
-                searchPath.add(searchPath.get(0));
-                MapLocation nextLoc;
-                boolean isDone = false;
-                for (int i = 1; i < 20; i += 4) {
-                    nextLoc = searchPath.get(i).translate(xStep, yStep);
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
 
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-                        
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-                    searchPath.add(nextLoc);
-                    if (isDone){
-                        break;
-                    }
-                    
-                    nextLoc  = searchPath.get(i - 1).translate(xStep2, yStep2);
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-
-                    searchPath.add(nextLoc);
-                    if (isDone){
-                        break;
-                    }
-                    nextLoc = searchPath.get(i + 2).translate(xStep2, yStep2);
-
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-
-                    searchPath.add(nextLoc);
-
-                    if (isDone){
-                        break;
-                    }
-
-                    nextLoc = searchPath.get(i + 1).translate(xStep, yStep);
-
-                    if (nextLoc.x > mapSize[0]){
-                        nextLoc = new MapLocation(mapSize[0], nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if (nextLoc.y > mapSize[1]){
-                        nextLoc = new MapLocation(nextLoc.x, mapSize[1]);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.x < 0){
-                        nextLoc = new MapLocation(0, nextLoc.y);
-                        isDone = true;
-                    }
-
-                    if(nextLoc.y < 0){
-                        nextLoc = new MapLocation(nextLoc.x, 0);
-                        isDone = true;
-                    }
-
-                    searchPath.add(nextLoc);
-
-                    if (isDone){
-                        break;
-                    }
-                    
-                }
-            }
-        }
-
-        ZigZagger zg = new ZigZagger();
+        ZigZagger zg = new ZigZagger(myLoc);
         
         switch (robotDirection) {
             case NORTH:
@@ -181,9 +65,7 @@ public class Launcher extends RobotPlayer {
         if (enemies.length > 0) {
             // If there are enemies, move towards them
             Direction dir = myLocation.directionTo(enemies[0].location);
-            if (rc.canMove(dir)) {
-                dfs(rc, dir);
-            }
+            dfs(rc, dir);
         } else {
             // If there are no enemies, move away from own HQ
             // try to go in the set path
@@ -192,9 +74,7 @@ public class Launcher extends RobotPlayer {
                 searchPath.remove(0);
             }
             Direction dir = myLocation.directionTo(searchPath.get(0));
-            if (rc.canMove(dir)) {
-                dfs(rc, dir);
-            }
+            dfs(rc, dir);
         }
     }
 

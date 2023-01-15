@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 public class Headquarters extends RobotPlayer {
 
+    
+
     static boolean buyCarrierNextRound = false;
     static Island islandToAttack = null;
     
@@ -44,19 +46,6 @@ public class Headquarters extends RobotPlayer {
             rc.buildRobot(RobotType.CARRIER, loc_carrier);
             numCarriers++;
         }
-
-        // spawning launchers
-        Direction launcher_dir = directions[rng.nextInt(8)];
-        MapLocation launcher_loc = rc.getLocation().add(launcher_dir);
-
-        int wantedLaunchers = (int)(3 * Math.log(rc.getRoundNum()) - 1);
-        if (numLaunchers < wantedLaunchers && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
-            rc.setIndicatorString("Building launchers");
-            
-            // rc.buildRobot(RobotType.LAUNCHER, launcher_loc); // TODO: make them useful
-            numLaunchers++;
-        }
-
         // building anchors
         if (sharedIslands.size() > numAnchorsBuilt &&
                 rc.canBuildAnchor(Anchor.STANDARD) && 
@@ -73,5 +62,18 @@ public class Headquarters extends RobotPlayer {
 
             numAnchorsBuilt++;
         }
+        
+        // spawning launchers
+        MapLocation enemyHQ = ownHQ.translate((mapSize[0]/2 - ownHQ.x)* 2, (mapSize[1]/2 - ownHQ.y)* 2);
+        Direction launcher_dir = ownHQ.directionTo(enemyHQ);
+        MapLocation launcher_loc = rc.getLocation().add(launcher_dir);
+        
+        if (rc.getResourceAmount(ResourceType.MANA) >= 160 && rc.getRoundNum() > wantedCarriers + 1 && rc.canBuildRobot(RobotType.LAUNCHER, launcher_loc)) {
+            rc.setIndicatorString("Building launchers");
+            
+            rc.buildRobot(RobotType.LAUNCHER, launcher_loc); // TODO: make them useful
+            numLaunchers++;
+        }
     }
+
 }
