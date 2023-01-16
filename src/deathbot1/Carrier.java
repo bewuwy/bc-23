@@ -5,8 +5,8 @@ import battlecode.common.*;
 public class Carrier extends RobotPlayer {
 
     static enum courierStatus {
-        ADAMANTIUM,
-        MANA,
+        // ADAMANTIUM,
+        // MANA,
         GATHERING,
         ANCHOR,
         RETURNING,
@@ -14,18 +14,37 @@ public class Carrier extends RobotPlayer {
     };
 
     static courierStatus currentCourierStatus = courierStatus.GATHERING;
+    static ResourceType currentCourierType;
     static MapLocation myWell = null;
 
     static boolean isAnchorCourier = false;
     static Island targetIsland;
 
     public static void initCarrier(RobotController rc) throws GameActionException {
-        // System.out.println("Initiating carrier");
+        int myHQID = rc.senseRobotAtLocation(ownHQ).getID();
+
+        // get own type
+        int carrier_type_input = rc.readSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(myHQID));
+        int carrier_type = Consts.hq_carrier_type_decode(carrier_type_input)[1];
+
+        switch (carrier_type) {
+            case Consts.CARRIER_TYPE_AD:
+                currentCourierType = ResourceType.ADAMANTIUM;
+                break;
+            case Consts.CARRIER_TYPE_MN:
+                currentCourierType = ResourceType.MANA;
+                break;
+            default:                
+                currentCourierType = ResourceType.MANA;
+                break;
+        }
+
+        // System.out.println("Initiating carrier, I am type: " + currentCourierType);
+        // System.out.println("My HQ ID is: " + hq_id + " at " + ownHQ);
+        // System.out.println("reading from shared array index " + (Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(hq_id)));
 
         int targetIslandIndex = rc.readSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX);
         int anchorHQID = rc.readSharedArray(Consts.CARRIER_ANCHOR_HQ_ID);
-    
-        int myHQID = rc.senseRobotAtLocation(ownHQ).getID();
 
         if (targetIslandIndex != 0 && anchorHQID == myHQID) {
 
@@ -95,7 +114,7 @@ public class Carrier extends RobotPlayer {
                     + " is adjacent to well " + myLocation.isAdjacentTo(myWell) + " " + myWell.toString());
         }
 
-        // ANCHOR BEHAVIOUR
+        //! ANCHOR BEHAVIOUR
         if (rc.getAnchor() != null) {
 
             rc.setIndicatorString("si size: " + sharedIslands.size() + " island: " + targetIsland);
@@ -123,7 +142,7 @@ public class Carrier extends RobotPlayer {
             return;
         }
 
-        // GATHERING BEHAVIOUR
+        //! RETURNING BEHAVIOUR
         if (currentCourierStatus == courierStatus.RETURNING) {
             Direction dir = myLocation.directionTo(ownHQ);
             dfs(rc, dir);
@@ -139,6 +158,7 @@ public class Carrier extends RobotPlayer {
                 rc.setIndicatorString("Switching to GATHERING");
             }
         } else {
+            //! GATHERING BEHAVIOUR
 
             // // Occasionally try out the carriers attack
             // if (rng.nextInt(20) == 1) {
@@ -161,8 +181,7 @@ public class Carrier extends RobotPlayer {
                                 " MN: " + rc.getResourceAmount(ResourceType.MANA) +
                                 " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
                     } else {
-                        currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to
-                                                                        // HQ
+                        currentCourierStatus = courierStatus.RETURNING; // If we can't collect from the well, return to HQ
                     }
                 } else {
                     // go towards myWell
@@ -176,8 +195,9 @@ public class Carrier extends RobotPlayer {
             } else {
                 WellInfo[] wells = rc.senseNearbyWells();
                 for (WellInfo well : wells) {
-                    Direction dir = myLocation.directionTo(well.getMapLocation());
-                    if (true) {
+
+                    // Direction dir = myLocation.directionTo(well.getMapLocation());
+                    if ( well.getResourceType() == currentCourierType ) {
                         myWell = well.getMapLocation();
                     }
                 }
@@ -235,6 +255,8 @@ public class Carrier extends RobotPlayer {
 
             }
         }
+
+        rc.setIndicatorString(currentCourierType.toString());
     }
 
 }

@@ -32,6 +32,21 @@ public class Headquarters extends RobotPlayer {
                         break;
                     case CARRIER:
                         numCarriers++;
+
+                        int carrierType = 1;
+                        if (numCarriers % 2 == 1) {
+                            carrierType = Consts.CARRIER_TYPE_AD;
+                        }
+                        else {
+                            carrierType = Consts.CARRIER_TYPE_MN;
+                        }
+
+                        // System.out.println("im building a carrier type " + carrierType + " writing to shared array index " + 
+                        //     (Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID())));
+
+                        rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID()), 
+                            Consts.hq_carrier_type_encode(rc.getID(), carrierType));
+
                         break;
                     default:
                         break;
@@ -87,14 +102,13 @@ public class Headquarters extends RobotPlayer {
 
         //! 4 starting carriers 
         Direction dir_carrier = directions[(numCarriers * 2) % 8];
-        MapLocation loc_carrier = rc.getLocation().add(dir_carrier).add(dir_carrier);
+        // MapLocation loc_carrier = rc.getLocation().add(dir_carrier).add(dir_carrier);
 
         int wantedCarriers = 4;
-        if (numCarriers <= wantedCarriers && rc.canBuildRobot(RobotType.CARRIER, loc_carrier)) {
-            rc.setIndicatorString("Building starter bots");
+        if (numCarriers <= wantedCarriers) {
+            // rc.setIndicatorString("Building starter bots");
             
-            rc.buildRobot(RobotType.CARRIER, loc_carrier);
-            numCarriers++;
+            spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }
         
         //! building anchors
@@ -103,7 +117,7 @@ public class Headquarters extends RobotPlayer {
                 rc.getResourceAmount(ResourceType.ADAMANTIUM) >= (50 + 100) && 
                 rc.getResourceAmount(ResourceType.MANA) >= 100) {
 
-            System.out.println("Building anchor nr" + numAnchorsBuilt + "; Shared islands size: " + sharedIslands.size());
+            // System.out.println("Building anchor nr" + numAnchorsBuilt + "; Shared islands size: " + sharedIslands.size());
             
             rc.setIndicatorString("Building anchor! " + Anchor.STANDARD);
             
