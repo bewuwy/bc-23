@@ -170,10 +170,6 @@ public strictfp class RobotPlayer {
     static MapLocation ownHQ;
     static int[] mapSize = new int[2];
 
-    // HQ VARS
-    static int numCarriers = 0;
-    static int numLaunchers = 0;
-    static int numAnchorsBuilt = 0;
     static boolean returnToHQ = false;
 
     static final Random rng = new Random(6147);

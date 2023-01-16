@@ -9,11 +9,13 @@ public class Headquarters extends RobotPlayer {
 
     static int max_carriers = 12;
 
+    static int numCarriers = 0;
+    static int numLaunchers = 0;
+    static int numAnchorsBuilt = 0;
+
     // static RobotType last_built = null;
 
-    public static boolean spawnBot(RobotController rc, MapLocation hq_loc, Direction dir, RobotType type) throws GameActionException {
-        rc.setIndicatorString("Building " + type);
-        
+    public static boolean spawnBot(RobotController rc, MapLocation hq_loc, Direction dir, RobotType type) throws GameActionException {        
         MapLocation robotSpawnLocation = hq_loc.add(dir);
         boolean canBuild = rc.canBuildRobot(type, robotSpawnLocation);
         
@@ -22,12 +24,11 @@ public class Headquarters extends RobotPlayer {
         MapLocation mapLoc;
 
         for (MapInfo mapInfo : nearby) {
-            
             mapLoc = mapInfo.getMapLocation();
-
             canBuild = rc.canBuildRobot(type, mapLoc);
 
             if (canBuild) {                
+                rc.setIndicatorString("Building " + type);
                 rc.buildRobot(type, mapLoc);
                 // last_built = type;
 
@@ -140,14 +141,14 @@ public class Headquarters extends RobotPlayer {
 
         Direction dir_launcher = ownHQ.directionTo(launcherTargetLoc);
 
-        if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 2 == 0 || rc.getRoundNum() < 300)) { // build launchers on even rounds or in early game
+        if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 4 == 0 || rc.getRoundNum() < 300)) { // build launchers every 4th round or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
         } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }
 
         //! too much adamantium, change carrier type to mana
-        if (ad_amount > 300 && turnCount > 50 && (mn_amount == 0 || (ad_amount / (mn_amount)) > 3)) {
+        if (ad_amount > 500 && turnCount > 50 && (mn_amount == 0 || (ad_amount / (mn_amount)) > 3)) {
             max_carriers += 2;
 
             rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID()), 
