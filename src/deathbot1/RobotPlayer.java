@@ -162,20 +162,19 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static int[] mapSize = new int[2];
-
-    static int turnCount = 0;
-
+    
     static Direction robotDirection;
     static List<MapLocation> searchPath = new ArrayList<MapLocation>();
-
+    
+    static int turnCount = 0;
     static MapLocation ownHQ;
-    static boolean returnToHQ = false;
+    static int[] mapSize = new int[2];
 
     // HQ VARS
     static int numCarriers = 0;
     static int numLaunchers = 0;
     static int numAnchorsBuilt = 0;
+    static boolean returnToHQ = false;
 
     static final Random rng = new Random(6147);
 
@@ -207,7 +206,7 @@ public strictfp class RobotPlayer {
         UNKNOWN
     }
 
-    static char[] internalMap = new char[3600];
+    // static char[] internalMap = new char[3600];
 
     static List<Island> sharedIslands = new ArrayList<>();
 
@@ -244,6 +243,7 @@ public strictfp class RobotPlayer {
             return i.index == this.index;
         }
     }
+
     // TODO: include map symmetry type in shared array
     // Convert an Island to an integer for use in the shared array
     static int islandToInt(Island island) {
@@ -306,42 +306,43 @@ public strictfp class RobotPlayer {
     // look at the terrain around you and save it to the internal map
     // save any islands to newIslands
     private static void scout(RobotController rc) throws GameActionException {
-        MapInfo[] visibleMap = rc.senseNearbyMapInfos();
-        for (int i = 0; i < visibleMap.length; i++) {
-            MapInfo loc_info = visibleMap[i];
-            MapLocation loc = loc_info.getMapLocation();
+        // MapInfo[] visibleMap = rc.senseNearbyMapInfos();
+        // for (int i = 0; i < visibleMap.length; i++) {
+        //     MapInfo loc_info = visibleMap[i];
+        //     MapLocation loc = loc_info.getMapLocation();
 
-            if(loc_info.hasCloud()) {
-                internalMap[loc.x*60 + loc.y] = 'c';
-            }
-            else if(!loc_info.isPassable()) {
-                internalMap[loc.x*60 + loc.y] = 'b';
-            } else switch(loc_info.getCurrentDirection()) {
-                case NORTH:
-                internalMap[loc.x*60 + loc.y] = 'n';
-                    break;
-                case SOUTH:
-                internalMap[loc.x*60 + loc.y] = 's';
-                    break;
-                case EAST:
-                internalMap[loc.x*60 + loc.y] = 'e';
-                    break;
-                case WEST:
-                internalMap[loc.x*60 + loc.y] = 'w';
-                    break;
-                case CENTER:
-                internalMap[loc.x*60 + loc.y] = 'n';
-                    break;
-                case NORTHEAST:
-                    break;
-                case NORTHWEST:
-                    break;
-                case SOUTHEAST:
-                    break;
-                case SOUTHWEST:
-                    break;
-            }
-        }
+        //     if(loc_info.hasCloud()) {
+        //         internalMap[loc.x*60 + loc.y] = 'c';
+        //     }
+        //     else if(!loc_info.isPassable()) {
+        //         internalMap[loc.x*60 + loc.y] = 'b';
+        //     } else switch(loc_info.getCurrentDirection()) {
+        //         case NORTH:
+        //         internalMap[loc.x*60 + loc.y] = 'n';
+        //             break;
+        //         case SOUTH:
+        //         internalMap[loc.x*60 + loc.y] = 's';
+        //             break;
+        //         case EAST:
+        //         internalMap[loc.x*60 + loc.y] = 'e';
+        //             break;
+        //         case WEST:
+        //         internalMap[loc.x*60 + loc.y] = 'w';
+        //             break;
+        //         case CENTER:
+        //         internalMap[loc.x*60 + loc.y] = 'n';
+        //             break;
+        //         case NORTHEAST:
+        //             break;
+        //         case NORTHWEST:
+        //             break;
+        //         case SOUTHEAST:
+        //             break;
+        //         case SOUTHWEST:
+        //             break;
+        //     }
+        // }
+
         // check for islands
         int[] islands_index = rc.senseNearbyIslands();
         for (int i : islands_index) {
@@ -364,8 +365,6 @@ public strictfp class RobotPlayer {
         // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
 
-        //! Init internalMap
-        
         mapSize[0] = rc.getMapWidth();
         mapSize[1] = rc.getMapHeight();
 
@@ -409,10 +408,11 @@ public strictfp class RobotPlayer {
 
                     // End of turn actions
 
+                    // if(turnCount == 1){
+                    //     Arrays.fill(internalMap, 'u');
+                    // }
+                    
                     // download new islands
-                    if(turnCount == 1){
-                        Arrays.fill(internalMap, 'u');
-                    }
                     downloadIslands(rc);
 
                     // gather and share information
