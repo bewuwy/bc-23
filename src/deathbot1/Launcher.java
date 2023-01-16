@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Launcher extends RobotPlayer {
 
-    public static final int LAUNCHERS_TO_ATTACK = 4;
+    public static final int LAUNCHERS_TO_ATTACK = 3;
 
     public static void initLauncher(RobotController rc) throws GameActionException {
 

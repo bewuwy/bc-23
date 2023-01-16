@@ -132,10 +132,19 @@ public class Headquarters extends RobotPlayer {
 
         Direction dir_launcher = ownHQ.directionTo(launcherTargetLoc);
 
-        if (numCarriers > 4 && rc.getRoundNum() % 2 == 0) { // build launchers on even rounds
+        if (numCarriers > 4 && (rc.getRoundNum() % 2 == 0 || rc.getRoundNum() < 300)) { // build launchers on even rounds or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
         } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= Consts.MAX_CARRIERS) {
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
+        }
+
+        //! too much adamantium, change carrier type to mana
+        if (rc.getResourceAmount(ResourceType.ADAMANTIUM) > 1000) {
+
+            rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID()), 
+                Consts.hq_carrier_type_encode(rc.getID(), Consts.CARRIER_TYPE_MN));
+
+            // System.out.println("pls change carrier type to mana");
         }
     }
 }

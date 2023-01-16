@@ -20,24 +20,10 @@ public class Carrier extends RobotPlayer {
     static boolean isAnchorCourier = false;
     static Island targetIsland;
 
+    static int myHQID;
+
     public static void initCarrier(RobotController rc) throws GameActionException {
-        int myHQID = rc.senseRobotAtLocation(ownHQ).getID();
-
-        // get own type
-        int carrier_type_input = rc.readSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(myHQID));
-        int carrier_type = Consts.hq_carrier_type_decode(carrier_type_input)[1];
-
-        switch (carrier_type) {
-            case Consts.CARRIER_TYPE_AD:
-                currentCourierType = ResourceType.ADAMANTIUM;
-                break;
-            case Consts.CARRIER_TYPE_MN:
-                currentCourierType = ResourceType.MANA;
-                break;
-            default:                
-                currentCourierType = ResourceType.MANA;
-                break;
-        }
+        myHQID = rc.senseRobotAtLocation(ownHQ).getID();
 
         // System.out.println("Initiating carrier, I am type: " + currentCourierType);
         // System.out.println("My HQ ID is: " + hq_id + " at " + ownHQ);
@@ -109,6 +95,42 @@ public class Carrier extends RobotPlayer {
 
     public static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
+
+        if (rc.canWriteSharedArray(0, 0)) { // can access shared array?
+            // get own type
+            int carrier_type_input = rc.readSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(myHQID));
+
+            if (carrier_type_input != 0) {
+
+                ResourceType newCourierType;
+
+                int carrier_type = Consts.hq_carrier_type_decode(carrier_type_input)[1];
+
+                switch (carrier_type) {
+                    case Consts.CARRIER_TYPE_AD:
+                        newCourierType = ResourceType.ADAMANTIUM;
+                        break;
+                    case Consts.CARRIER_TYPE_MN:
+                        newCourierType = ResourceType.MANA;
+                        break;
+                    default:                
+                        newCourierType = ResourceType.MANA;
+                        break;
+                }
+
+                if (currentCourierType != newCourierType) { // changed type
+                    currentCourierType = newCourierType;
+                    myWell = null;
+
+                    rc.setIndicatorString("I am now a " + currentCourierType + " carrier" + " after " + turnCount + " turns");
+
+                    rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(myHQID), 0);
+                }
+
+            }
+        }
+        
+        // if has a well set
         if (myWell != null) {
             rc.setIndicatorString(currentCourierStatus.toString() + " " + myLocation.toString()
                     + " is adjacent to well " + myLocation.isAdjacentTo(myWell) + " " + myWell.toString());
@@ -155,9 +177,8 @@ public class Carrier extends RobotPlayer {
             if (myLocation.isAdjacentTo(ownHQ)) {
                 for (ResourceType t : ResourceType.values()) {
                     int r = rc.getResourceAmount(t);
-                    if (r > 0) {
+                    if (r > 0 && rc.canTransferResource(ownHQ, t, r)) {
                         rc.transferResource(ownHQ, t, r);
-                        ;
                     }
                 }
                 currentCourierStatus = courierStatus.GATHERING;
@@ -262,7 +283,12 @@ public class Carrier extends RobotPlayer {
             }
         }
 
-        rc.setIndicatorString(currentCourierType.toString());
+
+        if (currentCourierType != null) {
+            
+            rc.setIndicatorString(currentCourierType.toString());
+        }
+
     }
 
 }

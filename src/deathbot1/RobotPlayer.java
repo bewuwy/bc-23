@@ -397,7 +397,7 @@ public strictfp class RobotPlayer {
                 }
 
                 // Run the bots
-                else {
+                // else {
                     switch (rc.getType()) {
                         case HEADQUARTERS: Headquarters.runHeadquarters(rc); break;
                         case CARRIER: Carrier.runCarrier(rc); break;
@@ -431,7 +431,7 @@ public strictfp class RobotPlayer {
 
                         shareIslands(rc);
                     }
-                }
+                // }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
                 // handle GameActionExceptions judiciously, in case unexpected events occur in the game
