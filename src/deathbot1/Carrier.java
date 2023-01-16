@@ -132,7 +132,13 @@ public class Carrier extends RobotPlayer {
             if (inTargetIsland) {
                 rc.setIndicatorString("Adjacent to target island");
 
-                rc.placeAnchor();
+                if (rc.canPlaceAnchor()) {
+
+                    rc.placeAnchor();
+                    rc.setIndicatorString("Placed anchor");
+                } else {
+                    System.out.println("Can't place anchor");
+                }
 
             } else if (dir != null) {
 
