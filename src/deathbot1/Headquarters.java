@@ -7,8 +7,12 @@ public class Headquarters extends RobotPlayer {
     static boolean buyCarrierNextRound = false;
     static Island islandToAttack = null;
 
+    static int max_carriers = 12;
+
+    // static RobotType last_built = null;
+
     public static boolean spawnBot(RobotController rc, MapLocation hq_loc, Direction dir, RobotType type) throws GameActionException {
-        rc.setIndicatorString("Building" + type);
+        rc.setIndicatorString("Building " + type);
         
         MapLocation robotSpawnLocation = hq_loc.add(dir);
         boolean canBuild = rc.canBuildRobot(type, robotSpawnLocation);
@@ -25,6 +29,7 @@ public class Headquarters extends RobotPlayer {
 
             if (canBuild) {                
                 rc.buildRobot(type, mapLoc);
+                // last_built = type;
 
                 switch (type) {
                     case LAUNCHER:
@@ -65,6 +70,9 @@ public class Headquarters extends RobotPlayer {
     }
     
     public static void runHeadquarters(RobotController rc) throws GameActionException {
+
+        int ad_amount = rc.getResourceAmount(ResourceType.ADAMANTIUM);
+        int mn_amount = rc.getResourceAmount(ResourceType.MANA);
 
         // System.out.println("turn " + rc.getRoundNum() + " HQ " + rc.getLocation());
         // // print shared array
@@ -114,8 +122,8 @@ public class Headquarters extends RobotPlayer {
         //! building anchors
         if (sharedIslands.size() > numAnchorsBuilt &&
                 rc.canBuildAnchor(Anchor.STANDARD) &&
-                rc.getResourceAmount(ResourceType.ADAMANTIUM) >= (50 + 100) && 
-                rc.getResourceAmount(ResourceType.MANA) >= 100) {
+                ad_amount >= (50 + 100) && 
+                mn_amount >= 100) {
 
             // System.out.println("Building anchor nr" + numAnchorsBuilt + "; Shared islands size: " + sharedIslands.size());
             
@@ -132,14 +140,15 @@ public class Headquarters extends RobotPlayer {
 
         Direction dir_launcher = ownHQ.directionTo(launcherTargetLoc);
 
-        if (numCarriers > 4 && (rc.getRoundNum() % 2 == 0 || rc.getRoundNum() < 300)) { // build launchers on even rounds or in early game
+        if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 2 == 0 || rc.getRoundNum() < 300)) { // build launchers on even rounds or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
-        } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= Consts.MAX_CARRIERS) {
+        } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }
 
         //! too much adamantium, change carrier type to mana
-        if (rc.getResourceAmount(ResourceType.ADAMANTIUM) > 1000) {
+        if (ad_amount > 300 && turnCount > 50 && (mn_amount == 0 || (ad_amount / (mn_amount)) > 3)) {
+            max_carriers += 2;
 
             rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID()), 
                 Consts.hq_carrier_type_encode(rc.getID(), Consts.CARRIER_TYPE_MN));

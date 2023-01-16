@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Launcher extends RobotPlayer {
 
-    public static final int LAUNCHERS_TO_ATTACK = 3;
+    public static final int LAUNCHERS_TO_ATTACK = 5;
 
     public static void initLauncher(RobotController rc) throws GameActionException {
 
@@ -40,7 +40,7 @@ public class Launcher extends RobotPlayer {
             dfs(rc, dir);      
         } else {
 
-            // move only if there are many launchers nearby
+            //! move only towards the enemy HQ if there are many launchers nearby, otherwise go to the center
             int numLaunchersNearby = 0;
 
             for (RobotInfo robot : rc.senseNearbyRobots(-1, rc.getTeam())) {
@@ -49,12 +49,14 @@ public class Launcher extends RobotPlayer {
                 }
             }
 
-            // if too few launchers nearby, don't move
-            if (numLaunchersNearby < LAUNCHERS_TO_ATTACK) {
-                return;
+            MapLocation launcherTargetLoc;
+            if (numLaunchersNearby >= LAUNCHERS_TO_ATTACK) {   
+                launcherTargetLoc = new MapLocation(mapSize[0] - ownHQ.x, mapSize[1] - ownHQ.y);
+            }
+            else {
+                launcherTargetLoc = new MapLocation(mapSize[0] / 2, mapSize[1] / 2);
             }
 
-            MapLocation launcherTargetLoc = new MapLocation(mapSize[0] - ownHQ.x, mapSize[1] - ownHQ.y);
             Direction dir = myLocation.directionTo(launcherTargetLoc);
             dfs(rc, dir);
         }

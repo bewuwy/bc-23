@@ -37,8 +37,6 @@ public class Consts {
     public static final int CARRIER_ANCHOR_ARRAY_INDEX = 59;
     public static final int CARRIER_ANCHOR_HQ_ID = 60;
 
-    public static final int MAX_CARRIERS = 12;
-
     // public static int islandIdToSharedArrayIndex(int islandId) {
     //     return islandId + 4; // +4 because the first 5 are reserved for the HQs and symmetry type
     // }
