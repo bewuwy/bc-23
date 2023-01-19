@@ -50,14 +50,20 @@ public class Launcher extends RobotPlayer {
 
             //! move only towards the enemy HQ if there are many launchers nearby, otherwise go to the center
             int numAllyLaunchersNearby = 0;
+            int enemiesHPSum = 0;
+            int alliesHPSum = 0;
             MapLocation enemyHQ = new MapLocation(mapSize[0] - ownHQ.x, mapSize[1] - ownHQ.y); // fail-safe
 
             for (RobotInfo robot : robotsNearby) {
                 if (robot.getType() == RobotType.LAUNCHER && robot.getTeam() == rc.getTeam()) {
                     numAllyLaunchersNearby++;
+                    alliesHPSum += robot.getHealth();
                 }
                 if (robot.getType() == RobotType.HEADQUARTERS && robot.getTeam() == rc.getTeam().opponent()) {
                     enemyHQ = robot.getLocation();
+                }
+                if (robot.getType() == RobotType.LAUNCHER && robot.getTeam() == rc.getTeam().opponent()) {
+                    enemiesHPSum += robot.getHealth();
                 }
             }
 
@@ -72,6 +78,12 @@ public class Launcher extends RobotPlayer {
             else {
                 // go to center
                 launcherTargetLoc = new MapLocation(mapSize[0] / 2, mapSize[1] / 2);
+            }
+
+            // retreat if enemies stronger
+            if (enemiesHPSum > alliesHPSum) {
+                launcherTargetLoc = enemyHQ;
+                opposite = true;
             }
 
             // if (enemies.size() > 0) {
