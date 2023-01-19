@@ -19,6 +19,8 @@ public class Consts {
             return result;
         }
 
+    public static final int ANCHOR_CARRIER_RETURNED_0 = 44;
+
     // hq ids are either 1,3,5,7 or 2,4,6,8
     public static int hq_id_to_array_index(int hq_id) {
         // if id is odd

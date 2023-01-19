@@ -7,13 +7,35 @@ public class Headquarters extends RobotPlayer {
     static boolean buyCarrierNextRound = false;
     static Island islandToAttack = null;
 
+    static boolean[] island_attacked = new boolean[36];
+    static boolean announced_island_to_attack = false;
+
     static int max_carriers = 12;
 
     static int numCarriers = 0;
     static int numLaunchers = 0;
     static int numAnchorsBuilt = 0;
+    
+    public static void announceIslandToAttack(RobotController rc) throws GameActionException {
 
-    // static RobotType last_built = null;
+        // find closest island not yet attacked to attack
+        int closestDist = 999999;
+        for (Island island : sharedIslands) {
+            if (!island_attacked[island.index]) {
+                int dist = ownHQ.distanceSquaredTo(island.loc);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    islandToAttack = island;
+                }
+            }
+        }
+        island_attacked[islandToAttack.index] = true;
+        
+        rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, islandToAttack.index);
+        rc.writeSharedArray(Consts.CARRIER_ANCHOR_HQ_ID, rc.getID());
+
+        announced_island_to_attack = true;
+    }
 
     public static boolean spawnBot(RobotController rc, MapLocation hq_loc, Direction dir, RobotType type) throws GameActionException {        
         MapLocation robotSpawnLocation = hq_loc.add(dir);
@@ -65,12 +87,17 @@ public class Headquarters extends RobotPlayer {
         return false;
     }
     
-    public  static void initHeadquarters(RobotController rc) throws GameActionException {
+    public static void initHeadquarters(RobotController rc) throws GameActionException {
         // System.out.println("Initiating headquarters");
         ownHQ = rc.getLocation();
+
+        for (int i = 0; i < 36; i++) {
+            island_attacked[i] = false;
+        }
     }
     
     public static void runHeadquarters(RobotController rc) throws GameActionException {
+        announced_island_to_attack = false;
 
         int ad_amount = rc.getResourceAmount(ResourceType.ADAMANTIUM);
         int mn_amount = rc.getResourceAmount(ResourceType.MANA);
@@ -90,7 +117,10 @@ public class Headquarters extends RobotPlayer {
 
         //! buy carrier with an anchor
         if (buyCarrierNextRound) {
-            Island islandToAttack = sharedIslands.get(numAnchorsBuilt - 1);
+
+            announceIslandToAttack(rc);
+
+            System.out.println("Buying carrier with anchor to attack island " + islandToAttack.index);
 
             Direction dir = rc.getLocation().directionTo(islandToAttack.loc);
             for (int i = 0; i < 8; i++) {
@@ -101,9 +131,6 @@ public class Headquarters extends RobotPlayer {
                 }
                 dir = dir.rotateLeft();
             }
-            
-            rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, islandToAttack.index);
-            rc.writeSharedArray(Consts.CARRIER_ANCHOR_HQ_ID, rc.getID());
 
             numCarriers++;
             buyCarrierNextRound = false;
@@ -155,6 +182,25 @@ public class Headquarters extends RobotPlayer {
                 Consts.hq_carrier_type_encode(rc.getID(), Consts.CARRIER_TYPE_MN));
 
             // System.out.println("pls change carrier type to mana");
+        }
+
+        //! check if returned anchor carrier nearby
+        int returned_anchor_id = rc.readSharedArray(Consts.ANCHOR_CARRIER_RETURNED_0 + Consts.hq_id_to_array_index(rc.getID()));
+        if (returned_anchor_id != 0) {
+            
+            RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1);
+
+            for (RobotInfo robot : nearbyRobots) {
+                if (robot.getID() == returned_anchor_id) {
+                    // System.out.println("Found returned anchor carrier " + returned_anchor_id);
+
+                    announceIslandToAttack(rc);
+
+                    // System.out.println("Announcing island " + islandToAttack.index + " for robot " + robot.getID());
+
+                    break;
+                }
+            }
         }
     }
 }

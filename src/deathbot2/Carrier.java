@@ -20,14 +20,10 @@ public class Carrier extends RobotPlayer {
     static boolean isAnchorCourier = false;
     static Island targetIsland;
 
+    static RobotInfo myHQInfo;
     static int myHQID;
 
-    public static void initCarrier(RobotController rc) throws GameActionException {
-        myHQID = rc.senseRobotAtLocation(ownHQ).getID();
-
-        // System.out.println("Initiating carrier, I am type: " + currentCourierType);
-        // System.out.println("My HQ ID is: " + hq_id + " at " + ownHQ);
-        // System.out.println("reading from shared array index " + (Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(hq_id)));
+    public static void loadTargetIsland(RobotController rc) throws GameActionException {
 
         int targetIslandIndex = rc.readSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX);
         int anchorHQID = rc.readSharedArray(Consts.CARRIER_ANCHOR_HQ_ID);
@@ -38,11 +34,32 @@ public class Carrier extends RobotPlayer {
             targetIsland = intToIsland(rc.readSharedArray(targetIslandIndex), targetIslandIndex);
 
             isAnchorCourier = true;
-            rc.takeAnchor(ownHQ, Anchor.STANDARD);
 
-            rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, 0);
-            rc.writeSharedArray(Consts.CARRIER_ANCHOR_HQ_ID, 0);
+            if (rc.getNumAnchors(Anchor.STANDARD) == 0) {
+
+                if (myHQInfo.getNumAnchors(Anchor.STANDARD) > 0) {
+
+                    rc.takeAnchor(ownHQ, Anchor.STANDARD);
+
+                    rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, 0);
+                    rc.writeSharedArray(Consts.CARRIER_ANCHOR_HQ_ID, 0);
+                }
+            }
+            
+            rc.writeSharedArray(Consts.ANCHOR_CARRIER_RETURNED_0 + Consts.hq_id_to_array_index(myHQID), 0);
         }
+    }
+
+    public static void initCarrier(RobotController rc) throws GameActionException {
+        myHQInfo = rc.senseRobotAtLocation(ownHQ);
+        myHQID = myHQInfo.getID();
+
+        // System.out.println("Initiating carrier, I am type: " + currentCourierType);
+        // System.out.println("My HQ ID is: " + hq_id + " at " + ownHQ);
+        // System.out.println("reading from shared array index " + (Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(hq_id)));
+
+        // try to load target island
+        loadTargetIsland(rc);
 
         MapLocation myLoc = rc.getLocation();
         robotDirection = ownHQ.directionTo(myLoc);
@@ -137,7 +154,7 @@ public class Carrier extends RobotPlayer {
         }
 
         //! ANCHOR BEHAVIOUR
-        if (rc.getAnchor() != null) {
+        if (rc.getAnchor() != null && currentCourierStatus != courierStatus.RETURNING) {
 
             rc.setIndicatorString("si size: " + sharedIslands.size() + " island: " + targetIsland);
 
@@ -154,14 +171,20 @@ public class Carrier extends RobotPlayer {
             if (inTargetIsland) {
                 rc.setIndicatorString("Adjacent to target island");
 
-                if (rc.canPlaceAnchor()) {
+                int islandHP = rc.senseAnchorPlantedHealth(targetIsland.index);
+
+                if (islandHP > 200) {
+                    // go to HQ change target island
+                    rc.setIndicatorString("this " + targetIsland.index + " island is occupied, going back to HQ" + currentCourierStatus);
+
+                    currentCourierStatus = courierStatus.RETURNING;
+                }
+ 
+                if (rc.canPlaceAnchor() && currentCourierStatus != courierStatus.RETURNING) {
 
                     rc.placeAnchor();
                     rc.setIndicatorString("Placed anchor");
-                } else {
-                    System.out.println("Can't place anchor");
                 }
-
             } else if (dir != null) {
 
                 dfs(rc, dir);
@@ -172,6 +195,18 @@ public class Carrier extends RobotPlayer {
 
         //! RETURNING BEHAVIOUR
         if (currentCourierStatus == courierStatus.RETURNING) {
+
+            if (rc.getAnchor() != null) {
+                // if has anchor, then it wants a new island to anchor on
+                // rc.writeSharedArray(myHQID, turnCount);
+
+                if (rc.canWriteSharedArray(0, 0)) {
+                    rc.writeSharedArray(Consts.ANCHOR_CARRIER_RETURNED_0 + Consts.hq_id_to_array_index(myHQID), rc.getID());
+
+                    loadTargetIsland(rc);
+                }
+            }
+
             Direction dir = myLocation.directionTo(ownHQ);
             dfs(rc, dir);
             if (myLocation.isAdjacentTo(ownHQ)) {
@@ -285,7 +320,6 @@ public class Carrier extends RobotPlayer {
 
 
         if (currentCourierType != null) {
-            
             rc.setIndicatorString(currentCourierType.toString());
         }
 
