@@ -172,9 +172,10 @@ public class Headquarters extends RobotPlayer {
 
         Direction dir_launcher = ownHQ.directionTo(launcherTargetLoc);
 
-        if (rc.getRoundNum() > 200 && rc.getRoundNum() > numAmplifiers * 200 && numAmplifiers < 7) {
-            spawnBot(rc, ownHQ, dir_launcher, RobotType.AMPLIFIER);
-        } else if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 4 == 0 || rc.getRoundNum() < 300)) { // build launchers every 4th round or in early game
+        // if (rc.getRoundNum() > 200 && rc.getRoundNum() > numAmplifiers * 200 && numAmplifiers < 7) {
+        //     spawnBot(rc, ownHQ, dir_launcher, RobotType.AMPLIFIER);
+        // } else //! They are still useless
+        if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 4 == 0 || rc.getRoundNum() < 300)) { // build launchers every 4th round or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
         } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);

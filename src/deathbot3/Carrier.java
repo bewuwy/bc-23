@@ -37,12 +37,17 @@ public class Carrier extends RobotPlayer {
 
             if (rc.getNumAnchors(Anchor.STANDARD) == 0) {
 
-                if (myHQInfo.getNumAnchors(Anchor.STANDARD) > 0) {
+                if (myHQInfo.getNumAnchors(Anchor.STANDARD) > 0 && rc.canTakeAnchor(ownHQ, Anchor.STANDARD)) {
 
                     rc.takeAnchor(ownHQ, Anchor.STANDARD);
 
                     rc.writeSharedArray(Consts.CARRIER_ANCHOR_ARRAY_INDEX, 0);
                     rc.writeSharedArray(Consts.CARRIER_ANCHOR_HQ_ID, 0);
+                } else if (!rc.getLocation().isAdjacentTo(ownHQ)) {
+                    // move towards HQ
+                    Direction dir = rc.getLocation().directionTo(ownHQ);
+                    dfs(rc, dir);
+                    dfs(rc, dir);
                 }
             }
             
