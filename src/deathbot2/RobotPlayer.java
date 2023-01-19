@@ -5,7 +5,6 @@ import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Arrays;
 
 public strictfp class RobotPlayer {
 
@@ -387,7 +386,7 @@ public strictfp class RobotPlayer {
                         case LAUNCHER: Launcher.initLauncher(rc); break;
                         case BOOSTER: break; // TODO
                         case DESTABILIZER: break; // TODO
-                        case AMPLIFIER: break; // TODO
+                        case AMPLIFIER: Amplifier.initAmplifier(rc); break; // TODO
                     }
                 }
 
@@ -399,7 +398,7 @@ public strictfp class RobotPlayer {
                         case LAUNCHER: Launcher.runLauncher(rc); break;
                         case BOOSTER: break; // TODO
                         case DESTABILIZER: break; // TODO
-                        case AMPLIFIER: break; // TODO
+                        case AMPLIFIER: Amplifier.runAmplifier(rc); break; // TODO
                     }
 
                     // End of turn actions
