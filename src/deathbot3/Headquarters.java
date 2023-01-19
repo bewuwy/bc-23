@@ -183,7 +183,6 @@ public class Headquarters extends RobotPlayer {
 
         //! too much adamantium, change carrier type to mana
         if (ad_amount > 500 && turnCount > 50 && (mn_amount == 0 || (ad_amount / (mn_amount)) > 3)) {
-            max_carriers += 2;
 
             rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID()), 
                 Consts.hq_carrier_type_encode(rc.getID(), Consts.CARRIER_TYPE_MN));
