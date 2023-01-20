@@ -98,6 +98,22 @@ public class Headquarters extends RobotPlayer {
         for (int i = 0; i < 36; i++) {
             island_attacked[i] = false;
         }
+
+         //! 4 starting carriers 
+         int startingCarriers = 4;
+         while (numCarriers < startingCarriers) {
+ 
+             Direction dir_carrier = directions[(numCarriers * 2) % 8];            
+             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
+         }
+
+         //! 3 starting launchers
+        int startingLaunchers = 3;
+        while (numLaunchers < startingLaunchers) {
+
+            Direction dir_launcher = directions[(numLaunchers * 2 + 1) % 8];
+            spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
+        }
     }
     
     public static void runHeadquarters(RobotController rc) throws GameActionException {
@@ -139,17 +155,6 @@ public class Headquarters extends RobotPlayer {
             numCarriers++;
             buyCarrierNextRound = false;
         }
-
-        //! 4 starting carriers 
-        Direction dir_carrier = directions[(numCarriers * 2) % 8];
-        // MapLocation loc_carrier = rc.getLocation().add(dir_carrier).add(dir_carrier);
-
-        int wantedCarriers = 4;
-        if (numCarriers <= wantedCarriers) {
-            // rc.setIndicatorString("Building starter bots");
-            
-            spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
-        }
         
         //! building anchors
         if (sharedIslands.size() > numAnchorsBuilt &&
@@ -178,6 +183,7 @@ public class Headquarters extends RobotPlayer {
         if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 4 == 0 || rc.getRoundNum() < 300)) { // build launchers every 4th round or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
         } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
+            Direction dir_carrier = directions[(numCarriers * 2) % 8];
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }
 
