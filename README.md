@@ -40,11 +40,11 @@ This is the Battlecode 2023 Batory HS repository. It contains the code for the B
 
 ### Shared Array
 
-0: Symmetry type (TODO)
-1-35: Islands
-36-39: HQ Locations (TODO)
-40-43: HQ Carrier type
-44-47: Anchor carrier returned
+- 0: Symmetry type (TODO)
+- 1-35: Islands
+- 36-39: HQ Locations (TODO)
+- 40-43: HQ Carrier type
+- 44-47: Anchor carrier returned
 <!-- 40-43: HQ AD amount
 43-46: HQ MN amount -->
-59: Anchor courier target island shared array location
+- 59: Anchor courier target island shared array location
