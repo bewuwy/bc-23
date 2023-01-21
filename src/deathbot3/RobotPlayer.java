@@ -207,14 +207,22 @@ public strictfp class RobotPlayer {
 
     static List<Island> newIslands = new ArrayList<>();
 
+    enum IslandOwner{
+        NEUTRAL,
+        ENEMY,
+        FRIENDLY
+    }
+
     // Wrapper class for island(map location and index)
     static class Island {
         MapLocation loc;
         int index;
+        IslandOwner owner;
 
-        public Island(MapLocation loc, int index) {
+        public Island(MapLocation loc, int index, IslandOwner owner) {
             this.loc = loc;
             this.index = index;
+            this.owner = owner;
         }
 
         @Override
@@ -239,15 +247,21 @@ public strictfp class RobotPlayer {
         }
     }
 
-    // TODO: include map symmetry type in shared array
     // Convert an Island to an integer for use in the shared array
     static int islandToInt(Island island) {
-        return  (island.loc.x << 6) + island.loc.y;
+        return  (island.owner.ordinal() << 12) + (island.loc.x << 6) + island.loc.y;
     }
 
     // Convert an integer to a Island for use in the internal map
     static Island intToIsland(int int_val, int index) {
-        return new Island(new MapLocation(int_val >>> 6 & 63, int_val & 63), index);
+        return new Island(new MapLocation(int_val >>> 6 & 63, int_val & 63), index, IslandOwner.values()[(int_val >>> 12) & 3]);
+    }
+
+    static IslandOwner islandOwner(RobotController rc, int index) throws GameActionException {
+        // TODO: make this work somehow
+        // return rc.senseAnchor(index).team == rc.getTeam() ? IslandOwner.FRIENDLY : IslandOwner.ENEMY;
+
+        return IslandOwner.NEUTRAL;
     }
 
     // Download islands from shared array
@@ -341,7 +355,7 @@ public strictfp class RobotPlayer {
         // check for islands
         int[] islands_index = rc.senseNearbyIslands();
         for (int i : islands_index) {
-            Island island = new Island(rc.senseNearbyIslandLocations(i)[0], i);
+            Island island = new Island(rc.senseNearbyIslandLocations(i)[0], i, islandOwner(rc, i));
             if (!sharedIslands.contains(island)) {
                 newIslands.add(island); //add islands to newIslands
             }
