@@ -22,7 +22,7 @@ public class Dfs {
                     }
                 }
             } else{
-                Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+                Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(), dir.opposite().rotateRight(), dir.opposite().rotateLeft(), dir.opposite()};
                 for (Direction d : dirs) {
                     if (rc.canMove(d)) {
                         rc.move(d);
