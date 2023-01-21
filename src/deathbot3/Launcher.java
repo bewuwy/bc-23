@@ -1,5 +1,6 @@
 package deathbot3;
 
+import deathbot3.Dfs;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class Launcher extends RobotPlayer {
 
             // If we are returning to HQ, move towards HQ
             Direction dir = myLocation.directionTo(ownHQ);
-            dfs(rc, dir);      
+            dfs.go(rc, dir);      
         } else {
 
             //! move only towards the enemy HQ if there are many launchers nearby, otherwise go to the center
@@ -103,7 +104,7 @@ public class Launcher extends RobotPlayer {
                 dir = dir.opposite();
             }
 
-            dfs(rc, dir);
+            dfs.go(rc, dir);
         }
     }
 

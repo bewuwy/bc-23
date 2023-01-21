@@ -19,7 +19,7 @@ public class Amplifier extends RobotPlayer {
         rc.setIndicatorString("Amplifier: " + searchPath.get(0).toString());
 
         Direction dir = rc.getLocation().directionTo(searchPath.get(0));
-        dfs(rc, dir);
+        dfs.go(rc, dir);
 
         if(rc.getLocation().isAdjacentTo(searchPath.get(0))){
             searchPath.remove(0);

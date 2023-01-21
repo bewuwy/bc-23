@@ -8,6 +8,8 @@ import java.util.Random;
 
 public strictfp class RobotPlayer {
 
+    static Dfs dfs = new Dfs();
+
     static class ZigZagger {
 
         MapLocation myLoc;
@@ -132,34 +134,6 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static Direction lastDfs;
-
-    static void dfs(RobotController rc, Direction dir) throws GameActionException {
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            lastDfs = dir;
-        } else {
-            if (lastDfs != null) {
-                Direction[] dirs = {lastDfs, lastDfs.rotateLeft(), lastDfs.rotateRight(), lastDfs.rotateLeft().rotateLeft(), lastDfs.rotateRight().rotateRight()};
-                for (Direction d : dirs) {
-                    if (rc.canMove(d)) {
-                        rc.move(d);
-                        lastDfs = d;
-                        break;
-                    }
-                }
-            } else{
-                Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
-                for (Direction d : dirs) {
-                    if (rc.canMove(d)) {
-                        rc.move(d);
-                        lastDfs = d;
-                        break;
-                    }
-                }
-            }
-        }
-    }
 
     
     static Direction robotDirection;

@@ -46,8 +46,8 @@ public class Carrier extends RobotPlayer {
                 } else if (!rc.getLocation().isAdjacentTo(ownHQ)) {
                     // move towards HQ
                     Direction dir = rc.getLocation().directionTo(ownHQ);
-                    dfs(rc, dir);
-                    dfs(rc, dir);
+                    dfs.go(rc, dir);
+                    dfs.go(rc, dir);
                 }
             }
             
@@ -192,7 +192,7 @@ public class Carrier extends RobotPlayer {
                 }
             } else if (dir != null) {
 
-                dfs(rc, dir);
+                dfs.go(rc, dir);
             }
 
             return;
@@ -213,7 +213,7 @@ public class Carrier extends RobotPlayer {
             }
 
             Direction dir = myLocation.directionTo(ownHQ);
-            dfs(rc, dir);
+            dfs.go(rc, dir);
             if (myLocation.isAdjacentTo(ownHQ)) {
                 for (ResourceType t : ResourceType.values()) {
                     int r = rc.getResourceAmount(t);
@@ -254,9 +254,9 @@ public class Carrier extends RobotPlayer {
                     // go towards myWell
                     Direction dir = myLocation.directionTo(myWell);
                     if (currentCourierStatus == courierStatus.GATHERING) {
-                        dfs(rc, dir);
+                        dfs.go(rc, dir);
                         dir = myLocation.directionTo(myWell);
-                        dfs(rc, dir);
+                        dfs.go(rc, dir);
                     }
                 }
             } else {
@@ -309,11 +309,11 @@ public class Carrier extends RobotPlayer {
 
                 Direction dir = myLocation.directionTo(searchPath.get(0));
                 if (currentCourierStatus == courierStatus.GATHERING) {
-                    dfs(rc, dir);
+                    dfs.go(rc, dir);
                 }
                 dir = myLocation.directionTo(searchPath.get(0));
                 if (currentCourierStatus == courierStatus.GATHERING) {
-                    dfs(rc, dir);
+                    dfs.go(rc, dir);
                 }
 
                 if (searchPath.get(0).isAdjacentTo(myLocation)) {
