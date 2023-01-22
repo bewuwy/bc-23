@@ -184,8 +184,11 @@ public class Headquarters extends RobotPlayer {
         if (rc.getRoundNum() >= (numAmplifiers+1) * 100 && numAmplifiers < 2) {
             spawnBot(rc, ownHQ, dir_launcher, RobotType.AMPLIFIER);
         }
+
+        rc.setIndicatorString("Ad amount: " + ad_amount + " Mana amount: " + mn_amount);
+
         //* Launchers
-        if (rc.getResourceAmount(ResourceType.MANA) >= 160 || rc.getRoundNum() < 300) { // build launchers every 4th round or in early game
+        if (mn_amount >= 160 || rc.getRoundNum() < 300) { // build launchers every 4th round or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
         }
         //* Carriers
