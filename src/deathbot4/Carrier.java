@@ -326,7 +326,7 @@ public class Carrier extends RobotPlayer {
 
                     searchPath.clear();
                     // if we are stuck for the first time, go to the center of the map
-                    if(stuck_counter == 0) {
+                    if(stuck_counter == 0 && myLocation.distanceSquaredTo(new MapLocation(mapSize[0] / 2, mapSize[1] / 2)) > 10) {
                         stuck_counter++;
                         createPath(myLocation, new MapLocation(mapSize[0] / 2, mapSize[1] / 2));
                     } else {
