@@ -3,6 +3,7 @@ package deathbot4;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -181,22 +182,17 @@ public strictfp class RobotPlayer {
 
     static List<Island> newIslands = new ArrayList<>();
 
-    enum IslandOwner{
-        NEUTRAL,
-        ENEMY,
-        FRIENDLY
-    }
 
     // Wrapper class for island(map location and index)
     static class Island {
         MapLocation loc;
         int index;
-        IslandOwner owner;
+        int taken;
 
-        public Island(MapLocation loc, int index, IslandOwner owner) {
+        public Island(MapLocation loc, int index, boolean taken) {
             this.loc = loc;
             this.index = index;
-            this.owner = owner;
+            this.taken = taken ? 1 : 0;
         }
 
         @Override
@@ -219,23 +215,28 @@ public strictfp class RobotPlayer {
             Island i = (Island) o;
             return i.index == this.index;
         }
+
+        public Comparator<Island> islandComparator = new Comparator<Island>() {
+            @Override
+            public int compare(Island o1, Island o2) {
+                return o1.index - o2.index;
+            }
+
+        };
     }
 
     // Convert an Island to an integer for use in the shared array
     static int islandToInt(Island island) {
-        return  (island.owner.ordinal() << 12) + (island.loc.x << 6) + island.loc.y;
+        return  ((int)island.taken << 13) + (island.loc.x << 6) + island.loc.y;
     }
 
     // Convert an integer to a Island for use in the internal map
     static Island intToIsland(int int_val, int index) {
-        return new Island(new MapLocation(int_val >>> 6 & 63, int_val & 63), index, IslandOwner.values()[(int_val >>> 12) & 3]);
+        return new Island(new MapLocation(int_val >>> 6 & 63, int_val & 63), index, (int_val >>> 13 & 1) == 1);
     }
 
-    static IslandOwner islandOwner(RobotController rc, int index) throws GameActionException {
-        // TODO: make this work somehow
-        // return rc.senseAnchor(index).team == rc.getTeam() ? IslandOwner.FRIENDLY : IslandOwner.ENEMY;
-
-        return IslandOwner.NEUTRAL;
+    static boolean islandOwner(RobotController rc, int index) throws GameActionException {
+        return rc.senseAnchor(index) != null;
     }
 
     // Download islands from shared array
@@ -257,9 +258,15 @@ public strictfp class RobotPlayer {
                 continue;
             }
 
+            Island islandObj = intToIsland(island, i);
+
+
+            if(sharedIslands.contains(new Island(islandObj.loc, islandObj.index, islandObj.taken == 0))){
+                sharedIslands.remove(islandObj);
+            }
             sharedIslands.add(intToIsland(island, i));
-            if(newIslands.contains(intToIsland(island, i))){
-                newIslands.remove(intToIsland(island, i));
+            if(newIslands.contains(islandObj)){
+                newIslands.remove(islandObj);
             }
 
             i++;
@@ -399,7 +406,7 @@ public strictfp class RobotPlayer {
                     downloadIslands(rc);
 
                     // gather and share information
-                    if (turnCount % 3 == 1) {
+                    if (true) {
                         scout(rc);
 
                         // if can't share, go back to HQ

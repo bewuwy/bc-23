@@ -12,17 +12,20 @@ public class Amplifier extends RobotPlayer {
     }
 
     static void runAmplifier(RobotController rc) throws GameActionException {
-        if(searchPath.isEmpty()){
-            searchPath.add(new MapLocation(rng.nextInt(mapSize[0]),rng.nextInt(mapSize[1])));
-        }
         
-        rc.setIndicatorString("Amplifier: " + searchPath.get(0).toString());
+        //* find launchers nearby and follow one
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
 
-        Direction dir = rc.getLocation().directionTo(searchPath.get(0));
-        dfs.go(rc, dir);
+        MapLocation target = rc.getLocation();
 
-        if(rc.getLocation().isAdjacentTo(searchPath.get(0))){
-            searchPath.remove(0);
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.type == RobotType.LAUNCHER) {
+                
+                target = robot.location;
+            }
         }
+
+        Direction dir = rc.getLocation().directionTo(target);
+        dfs.go(rc, dir);
     }
 }

@@ -177,12 +177,16 @@ public class Headquarters extends RobotPlayer {
 
         Direction dir_launcher = ownHQ.directionTo(launcherTargetLoc);
 
-        // if (rc.getRoundNum() > 200 && rc.getRoundNum() > numAmplifiers * 200 && numAmplifiers < 7) {
-        //     spawnBot(rc, ownHQ, dir_launcher, RobotType.AMPLIFIER);
-        // } else //! They are still useless
-        if ((numCarriers > 4 || ad_amount < 50 ) && (rc.getRoundNum() % 4 == 0 || rc.getRoundNum() < 300)) { // build launchers every 4th round or in early game
+        //* Amplifiers
+        if (rc.getRoundNum() >= (numAmplifiers+1) * 100 && numAmplifiers < 2) {
+            spawnBot(rc, ownHQ, dir_launcher, RobotType.AMPLIFIER);
+        }
+        //* Launchers
+        if ((ad_amount >= 160) || rc.getRoundNum() < 300) { // build launchers every 4th round or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
-        } else if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
+        }
+        //* Carriers
+        if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
             Direction dir_carrier = directions[(numCarriers * 2) % 8];
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }
@@ -193,7 +197,6 @@ public class Headquarters extends RobotPlayer {
             rc.writeSharedArray(Consts.HQ_CARRIER_TYPE_ARRAY_INDEX_0 + Consts.hq_id_to_array_index(rc.getID()), 
                 Consts.hq_carrier_type_encode(rc.getID(), Consts.CARRIER_TYPE_MN));
 
-            // System.out.println("pls change carrier type to mana");
         }
 
         //! check if returned anchor carrier nearby
