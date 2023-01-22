@@ -16,6 +16,9 @@ public class Headquarters extends RobotPlayer {
     static int numLaunchers = 0;
     static int numAnchorsBuilt = 0;
     static int numAmplifiers = 0;
+
+    static int ad_amount = 0;
+    static int mn_amount = 0;
     
     public static void announceIslandToAttack(RobotController rc) throws GameActionException {
 
@@ -119,8 +122,8 @@ public class Headquarters extends RobotPlayer {
     public static void runHeadquarters(RobotController rc) throws GameActionException {
         announced_island_to_attack = false;
 
-        int ad_amount = rc.getResourceAmount(ResourceType.ADAMANTIUM);
-        int mn_amount = rc.getResourceAmount(ResourceType.MANA);
+        ad_amount = rc.getResourceAmount(ResourceType.ADAMANTIUM);
+        mn_amount = rc.getResourceAmount(ResourceType.MANA);
 
         // System.out.println("turn " + rc.getRoundNum() + " HQ " + rc.getLocation());
         // // print shared array
@@ -182,11 +185,11 @@ public class Headquarters extends RobotPlayer {
             spawnBot(rc, ownHQ, dir_launcher, RobotType.AMPLIFIER);
         }
         //* Launchers
-        if ((ad_amount >= 160) || rc.getRoundNum() < 300) { // build launchers every 4th round or in early game
+        if (rc.getResourceAmount(ResourceType.MANA) >= 160 || rc.getRoundNum() < 300) { // build launchers every 4th round or in early game
             spawnBot(rc, ownHQ, dir_launcher, RobotType.LAUNCHER);
         }
         //* Carriers
-        if (rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) {
+        if ((rc.getRoundNum() % 4 == 1 && numCarriers <= max_carriers) || ad_amount > 500) {
             Direction dir_carrier = directions[(numCarriers * 2) % 8];
             spawnBot(rc, ownHQ, dir_carrier, RobotType.CARRIER);
         }

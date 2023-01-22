@@ -1,6 +1,8 @@
 package deathbot4;
 
 import battlecode.common.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Carrier extends RobotPlayer {
 
@@ -22,6 +24,9 @@ public class Carrier extends RobotPlayer {
 
     static RobotInfo myHQInfo;
     static int myHQID;
+
+    static List<MapLocation> history = new ArrayList<MapLocation>();
+    static int stuck_counter = 0;
 
     public static void loadTargetIsland(RobotController rc) throws GameActionException {
 
@@ -53,6 +58,43 @@ public class Carrier extends RobotPlayer {
             
             rc.writeSharedArray(Consts.ANCHOR_CARRIER_RETURNED_0 + Consts.hq_id_to_array_index(myHQID), 0);
         }
+    }
+
+    static void createPath(MapLocation myLocation, MapLocation target){
+        robotDirection = myLocation.directionTo(target);
+        ZigZagger zg = new ZigZagger(myLocation);
+        switch (robotDirection) {
+           case NORTH:
+               zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
+               break;
+           case NORTHEAST:
+               zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
+               break;
+           case EAST:
+               zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
+               break;
+           case SOUTHEAST:
+               zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
+               break;
+           case SOUTH:
+               zg.createZigZagSearchPath(0, -3, -9, 9, -9, -9);
+               break;
+           case SOUTHWEST:
+               zg.createZigZagSearchPath(-3, -3, -12, 0, 0, -12);
+               break;
+           case WEST:
+               zg.createZigZagSearchPath(-3, 0, -9, -9, 9, -9);
+               break;
+           case NORTHWEST:
+               zg.createZigZagSearchPath(-3, 3, 0, -12, 12, 0);
+               break;
+           case CENTER:
+               break;
+        }
+        // System.out.println("Created path " + searchPath);
+
+        // // add random to searchPath
+        // searchPath.add(new MapLocation(rng.nextInt(mapSize[0]), rng.nextInt(mapSize[1])));
     }
 
     public static void initCarrier(RobotController rc) throws GameActionException {
@@ -117,6 +159,8 @@ public class Carrier extends RobotPlayer {
 
     public static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
+        
+        //rc.setIndicatorString("history: " + history);
 
         if (rc.canWriteSharedArray(0, 0)) { // can access shared array?
             // get own type
@@ -273,47 +317,37 @@ public class Carrier extends RobotPlayer {
                 if (searchPath.size() == 0) {
 
                     // if we are at the end of the path, go to the center of the map
-                    robotDirection = myLocation.directionTo(new MapLocation(mapSize[0] / 2, mapSize[1] / 2));
+                    createPath(myLocation, new MapLocation(mapSize[0] / 2, mapSize[1] / 2));
+                }
 
-                    ZigZagger zg = new ZigZagger(myLocation);
+                
+                if(history.contains(myLocation)) {
+                    rc.setIndicatorString("stuck" + "going to: " + searchPath.get(0).toString() + "");
 
-                    switch (robotDirection) {
-                        case NORTH:
-                            zg.createZigZagSearchPath(0, 3, 9, -9, 9, 9);
-                            break;
-                        case NORTHEAST:
-                            zg.createZigZagSearchPath(3, 3, 12, 0, 0, 12);
-                            break;
-                        case EAST:
-                            zg.createZigZagSearchPath(3, 0, 9, 9, -9, 9);
-                            break;
-                        case SOUTHEAST:
-                            zg.createZigZagSearchPath(3, -3, 0, 12, -12, 0);
-                            break;
-                        case SOUTH:
-                            zg.createZigZagSearchPath(0, -3, -9, 9, -9, -9);
-                            break;
-                        case SOUTHWEST:
-                            zg.createZigZagSearchPath(-3, -3, -12, 0, 0, -12);
-                            break;
-                        case WEST:
-                            zg.createZigZagSearchPath(-3, 0, -9, -9, 9, -9);
-                            break;
-                        case NORTHWEST:
-                            zg.createZigZagSearchPath(-3, 3, 0, -12, 12, 0);
-                            break;
-                        case CENTER:
-                            break;
+                    searchPath.clear();
+                    // if we are stuck for the first time, go to the center of the map
+                    if(stuck_counter == 0) {
+                        stuck_counter++;
+                        createPath(myLocation, new MapLocation(mapSize[0] / 2, mapSize[1] / 2));
+                    } else {
+                        // if we are stuck for the second time, go to random location
+                        stuck_counter = 0;
+                        createPath(myLocation, new MapLocation(rng.nextInt(mapSize[0]), rng.nextInt(mapSize[1])));
                     }
                 }
+                history.add(myLocation);
+
+
 
                 Direction dir = myLocation.directionTo(searchPath.get(0));
                 if (currentCourierStatus == courierStatus.GATHERING) {
                     dfs.go(rc, dir);
+                    history.add(myLocation);
                 }
                 dir = myLocation.directionTo(searchPath.get(0));
                 if (currentCourierStatus == courierStatus.GATHERING) {
                     dfs.go(rc, dir);
+                    history.add(myLocation);
                 }
 
                 if (searchPath.get(0).isAdjacentTo(myLocation)) {

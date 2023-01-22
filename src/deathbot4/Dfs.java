@@ -8,6 +8,18 @@ public class Dfs {
     Direction lastDfs;
 
     void go(RobotController rc, Direction dir) throws GameActionException {
+
+        if(lastDfs == dir.opposite()){
+            Direction[] dirs = {lastDfs.rotateLeft(), lastDfs.rotateRight(), lastDfs.rotateLeft().rotateLeft(), lastDfs.rotateRight().rotateRight(), lastDfs};
+                for (Direction d : dirs) {
+                    if (rc.canMove(d)) {
+                        rc.move(d);
+                        lastDfs = d;
+                        return;
+                    }
+                }
+        }
+
         if (rc.canMove(dir)) {
             rc.move(dir);
             lastDfs = dir;
